@@ -579,7 +579,7 @@ var init_mimic_function = __esm(() => {
   toStringName = Object.getOwnPropertyDescriptor(Function.prototype.toString, "name");
 });
 
-// node_modules/onetime/index.js
+// node_modules/restore-cursor/node_modules/onetime/index.js
 var calledFunctions, onetime = (function_, options = {}) => {
   if (typeof function_ !== "function") {
     throw new TypeError("Expected a function");
@@ -613,7 +613,7 @@ var init_onetime = __esm(() => {
   onetime_default = onetime;
 });
 
-// node_modules/signal-exit/dist/mjs/signals.js
+// node_modules/restore-cursor/node_modules/signal-exit/dist/mjs/signals.js
 var signals;
 var init_signals = __esm(() => {
   signals = [];
@@ -626,7 +626,7 @@ var init_signals = __esm(() => {
   }
 });
 
-// node_modules/signal-exit/dist/mjs/index.js
+// node_modules/restore-cursor/node_modules/signal-exit/dist/mjs/index.js
 class Emitter {
   emitted = {
     afterExit: false,
