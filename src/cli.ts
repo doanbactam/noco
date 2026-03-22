@@ -79,7 +79,7 @@ async function runInstallCommand(): Promise<void> {
 program
   .name('nococli')
   .description('Remove AI co-author signatures from git commits')
-  .version('1.0.1');
+  .version('1.0.2');
 
 // Install command
 program

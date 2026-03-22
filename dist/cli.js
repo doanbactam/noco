@@ -13585,7 +13585,7 @@ async function runInstallCommand() {
     process.exit(1);
   }
 }
-program2.name("nococli").description("Remove AI co-author signatures from git commits").version("1.0.1");
+program2.name("nococli").description("Remove AI co-author signatures from git commits").version("1.0.2");
 program2.command("install").description("Install noco hook globally for all new git repositories").option("-f, --force", "Overwrite existing hook without prompting").option("-s, --silent", "Silent mode - no output").action(runInstallCommand);
 program2.command("uninstall").description("Remove noco hook from your system").option("-c, --remove-config", "Also remove git template directory config").option("-s, --silent", "Silent mode - no output").action(async (options) => {
   if (!options.silent) {

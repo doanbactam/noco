@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2026-03-22
+
+### Changed
+- `npx nococli` now runs the install flow by default instead of only showing help
+- Installation now warns clearly when `init.templatedir` already points to a different template directory
+
+### Fixed
+- Git config updates now use direct process arguments instead of shell quoting, so `git init` can copy hooks correctly on Windows
+
+### Added
+- End-to-end install coverage for the default install path and template-directory conflict handling
+
 ## [1.0.1] - 2026-03-22
 
 ### Added
