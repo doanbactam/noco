@@ -1,5 +1,5 @@
 {
-  "name": "@iamsyr/noco",
+  "name": "nococli",
   "version": "1.0.0",
   "description": "Keep your code yours — remove AI co-author signatures from git commits",
   "type": "module",

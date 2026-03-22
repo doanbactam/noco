@@ -13572,7 +13572,7 @@ var Listr = class {
 var import_prompts = __toESM(require_prompts3(), 1);
 var logger2 = new Logger;
 var program2 = new Command;
-program2.name("@iamsyr/noco").description("Keep your code yours").version("1.0.0");
+program2.name("nococli").description("Keep your code yours").version("1.0.0");
 program2.command("install").description("Install noco hook").option("-f, --force", "Overwrite existing hook").option("-s, --silent", "Silent mode").action(async (options) => {
   const tasks = new Listr([
     {
