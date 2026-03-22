@@ -1,23 +1,19 @@
 # nococli
 
-> AI exists to help you. You remain the owner and accountable for your work.
+> Your code is yours. Your commits should be too.
 
-Claude Code auto-adds itself as a co-author on every commit. Copilot, Cursor, and others do too.
+AI tools (Claude Code, Copilot, Cursor) auto-add themselves as co-author on every commit.
 
-That's great for their branding. You can see Claude everywhere on GitHub.
+But **you** wrote the code. **You** understand it. **You're** responsible.
 
-But **you** wrote the code. **You** understand it. **You're** responsible when it breaks.
-
-Your commits should reflect that.
-
-## Install
+One command to reclaim ownership:
 
 ```bash
 npx nococli
 ```
 
-One command. Your commits are yours again.
+That's it.
 
 ---
 
-*"We don't do this for Codex because it exists to help you and it's important that you remain the owner and accountable for your work without AI taking credit."* — [Tibo](https://x.com/thsottiaux/status/2035386081517133924)
+*"AI exists to help you. It's important that you remain the owner and accountable for your work without AI taking credit."* — [Tibo](https://x.com/thsottiaux/status/2035386081517133924)
