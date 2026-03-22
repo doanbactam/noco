@@ -1,4 +1,4 @@
-# noco
+# nococli
 
 > AI exists to help you. You remain the owner and accountable for your work.
 
@@ -13,7 +13,7 @@ Your commits should reflect that.
 ## Install
 
 ```bash
-npx noco
+npx nococli
 ```
 
 One command. Your commits are yours again.
