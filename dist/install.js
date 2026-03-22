@@ -2206,7 +2206,7 @@ var init_string_width = __esm(() => {
 });
 
 // src/types.ts
-var AI_PATTERN_REGEX = "^Co-Authored-By: (Claude|GitHub Copilot|ChatGPT|Anthropic|OpenAI|Cursor AI|AI Assistant).*";
+var AI_PATTERN_REGEX = "^Co-Authored-By: (Claude|GitHub Copilot|ChatGPT|Anthropic|OpenAI|Cursor AI|AI Assistant|Tabnine|CodeWhisperer|Codeium|Replit Ghostwriter|Sourcegraph Cody|Cody).*";
 var DEFAULT_AI_PATTERNS = [
   {
     name: "AI Co-Authors",
