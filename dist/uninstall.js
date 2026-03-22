@@ -2205,9 +2205,6 @@ var init_string_width = __esm(() => {
   defaultIgnorableCodePointRegex = /^\p{Default_Ignorable_Code_Point}$/u;
 });
 
-// src/uninstall.ts
-import fs from "fs/promises";
-
 // node_modules/chalk/source/vendor/ansi-styles/index.js
 var ANSI_BACKGROUND_OFFSET = 10;
 var wrapAnsi16 = (offset = 0) => (code) => `\x1B[${code + offset}m`;
@@ -3191,6 +3188,7 @@ var logger = new Logger;
 // src/utils/paths.ts
 import path from "path";
 import os2 from "os";
+import fs from "fs/promises";
 function getHomeDir() {
   return os2.homedir();
 }
@@ -3207,6 +3205,14 @@ function getConfig() {
 }
 function toGitPath(filePath) {
   return filePath.replace(/\\/g, "/");
+}
+async function pathExists(filePath) {
+  try {
+    await fs.promises.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // src/utils/git.ts
@@ -3245,6 +3251,7 @@ function setTemplateDir(templatePath) {
 }
 
 // src/uninstall.ts
+import fs2 from "fs/promises";
 async function uninstall(options = {}) {
   const logger2 = new Logger(options.silent);
   const config = getConfig();
@@ -3252,25 +3259,25 @@ async function uninstall(options = {}) {
   try {
     logger2.start("Removing hook file...");
     try {
-      await fs.unlink(config.hookFile);
+      await fs2.unlink(config.hookFile);
       logger2.succeed(`Removed ${config.hookFile}`);
     } catch {
       logger2.info("Hook file not found (already removed?)");
     }
     try {
-      const hooksExists = await fs.access(config.hooksDir).then(() => true).catch(() => false);
+      const hooksExists = await fs2.access(config.hooksDir).then(() => true).catch(() => false);
       if (hooksExists) {
-        const files = await fs.readdir(config.hooksDir);
+        const files = await fs2.readdir(config.hooksDir);
         if (files.length === 0) {
-          await fs.rmdir(config.hooksDir);
+          await fs2.rmdir(config.hooksDir);
           logger2.info("Removed empty hooks directory");
         }
       }
-      const templateExists = await fs.access(config.templateDir).then(() => true).catch(() => false);
+      const templateExists = await fs2.access(config.templateDir).then(() => true).catch(() => false);
       if (templateExists) {
-        const files = await fs.readdir(config.templateDir);
+        const files = await fs2.readdir(config.templateDir);
         if (files.length === 0) {
-          await fs.rmdir(config.templateDir);
+          await fs2.rmdir(config.templateDir);
           logger2.info("Removed empty templates directory");
         }
       }

@@ -2786,7 +2786,7 @@ var require_command = __commonJS((exports) => {
   var EventEmitter = __require("node:events").EventEmitter;
   var childProcess = __require("node:child_process");
   var path2 = __require("node:path");
-  var fs3 = __require("node:fs");
+  var fs4 = __require("node:fs");
   var process10 = __require("node:process");
   var { Argument, humanReadableArgName } = require_argument();
   var { CommanderError } = require_error();
@@ -3280,11 +3280,11 @@ Expecting one of '${allowedValues.join("', '")}'`);
       const sourceExt = [".js", ".ts", ".tsx", ".mjs", ".cjs"];
       function findFile(baseDir, baseName) {
         const localBin = path2.resolve(baseDir, baseName);
-        if (fs3.existsSync(localBin))
+        if (fs4.existsSync(localBin))
           return localBin;
         if (sourceExt.includes(path2.extname(baseName)))
           return;
-        const foundExt = sourceExt.find((ext) => fs3.existsSync(`${localBin}${ext}`));
+        const foundExt = sourceExt.find((ext) => fs4.existsSync(`${localBin}${ext}`));
         if (foundExt)
           return `${localBin}${foundExt}`;
         return;
@@ -3296,7 +3296,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
       if (this._scriptPath) {
         let resolvedScriptPath;
         try {
-          resolvedScriptPath = fs3.realpathSync(this._scriptPath);
+          resolvedScriptPath = fs4.realpathSync(this._scriptPath);
         } catch (err) {
           resolvedScriptPath = this._scriptPath;
         }
@@ -10252,18 +10252,6 @@ var require_prompts3 = __commonJS((exports, module) => {
   module.exports = isNodeLT("8.6.0") ? require_dist() : require_lib();
 });
 
-// src/types.ts
-var AI_PATTERN_REGEX = "^Co-Authored-By: (Claude|GitHub Copilot|ChatGPT|Anthropic|OpenAI|Cursor AI|AI Assistant|Tabnine|CodeWhisperer|Codeium|Replit Ghostwriter|Sourcegraph Cody|Cody).*";
-var DEFAULT_AI_PATTERNS = [
-  {
-    name: "AI Co-Authors",
-    pattern: AI_PATTERN_REGEX
-  }
-];
-
-// src/install.ts
-import fs from "fs/promises";
-
 // node_modules/chalk/source/vendor/ansi-styles/index.js
 var ANSI_BACKGROUND_OFFSET = 10;
 var wrapAnsi16 = (offset = 0) => (code) => `\x1B[${code + offset}m`;
@@ -11247,6 +11235,7 @@ var logger = new Logger;
 // src/utils/paths.ts
 import path from "path";
 import os2 from "os";
+import fs from "fs/promises";
 function getHomeDir() {
   return os2.homedir();
 }
@@ -11264,6 +11253,23 @@ function getConfig() {
 function toGitPath(filePath) {
   return filePath.replace(/\\/g, "/");
 }
+async function pathExists(filePath) {
+  try {
+    await fs.promises.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// src/types.ts
+var AI_PATTERN_REGEX = "^Co-Authored-By: (Claude|GitHub Copilot|ChatGPT|Anthropic|OpenAI|Cursor AI|AI Assistant|Tabnine|CodeWhisperer|Codeium|Replit Ghostwriter|Sourcegraph Cody|Cody).*";
+var DEFAULT_AI_PATTERNS = [
+  {
+    name: "AI Co-Authors",
+    pattern: AI_PATTERN_REGEX
+  }
+];
 
 // src/utils/hook.ts
 function generateHookContent(options = {}) {
@@ -11283,6 +11289,9 @@ ${sedCommands}
 # Remove trailing empty lines
 sed -i -e :a -e '/^$/{$d;N;ba' -e '}' "$COMMIT_MSG_FILE"
 `;
+}
+function getDefaultPatterns() {
+  return DEFAULT_AI_PATTERNS;
 }
 function getPatternNames() {
   return DEFAULT_AI_PATTERNS.map((p) => p.name);
@@ -11324,14 +11333,15 @@ function setTemplateDir(templatePath) {
 }
 
 // src/install.ts
+import fs2 from "fs/promises";
 async function install(options = {}) {
   const logger2 = new Logger(options.silent);
   const config = getConfig();
   try {
     logger2.start("Creating git templates directory...");
-    await fs.mkdir(config.hooksDir, { recursive: true });
+    await fs2.mkdir(config.hooksDir, { recursive: true });
     const hookContent = generateHookContent();
-    await fs.writeFile(config.hookFile, hookContent, { mode: 493 });
+    await fs2.writeFile(config.hookFile, hookContent, { mode: 493 });
     logger2.succeed(`Hook created at ${config.hookFile}`);
     logger2.start("Configuring git templates...");
     const currentTemplate = getTemplateDir();
@@ -11398,7 +11408,7 @@ async function main2() {
 }
 
 // src/uninstall.ts
-import fs2 from "fs/promises";
+import fs3 from "fs/promises";
 async function uninstall(options = {}) {
   const logger2 = new Logger(options.silent);
   const config = getConfig();
@@ -11406,25 +11416,25 @@ async function uninstall(options = {}) {
   try {
     logger2.start("Removing hook file...");
     try {
-      await fs2.unlink(config.hookFile);
+      await fs3.unlink(config.hookFile);
       logger2.succeed(`Removed ${config.hookFile}`);
     } catch {
       logger2.info("Hook file not found (already removed?)");
     }
     try {
-      const hooksExists = await fs2.access(config.hooksDir).then(() => true).catch(() => false);
+      const hooksExists = await fs3.access(config.hooksDir).then(() => true).catch(() => false);
       if (hooksExists) {
-        const files = await fs2.readdir(config.hooksDir);
+        const files = await fs3.readdir(config.hooksDir);
         if (files.length === 0) {
-          await fs2.rmdir(config.hooksDir);
+          await fs3.rmdir(config.hooksDir);
           logger2.info("Removed empty hooks directory");
         }
       }
-      const templateExists = await fs2.access(config.templateDir).then(() => true).catch(() => false);
+      const templateExists = await fs3.access(config.templateDir).then(() => true).catch(() => false);
       if (templateExists) {
-        const files = await fs2.readdir(config.templateDir);
+        const files = await fs3.readdir(config.templateDir);
         if (files.length === 0) {
-          await fs2.rmdir(config.templateDir);
+          await fs3.rmdir(config.templateDir);
           logger2.info("Removed empty templates directory");
         }
       }
@@ -13616,10 +13626,10 @@ program2.command("status").description("Check if noco is properly installed and 
     {
       title: "Checking hook file",
       task: async () => {
-        const fs3 = await import("fs/promises");
+        const fs4 = await import("fs/promises");
         const config = getConfig();
         try {
-          await fs3.access(config.hookFile);
+          await fs4.access(config.hookFile);
           return source_default.green("✓ Hook file exists");
         } catch {
           return source_default.yellow("✗ Hook file not found");

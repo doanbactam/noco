@@ -1,6 +1,6 @@
 {
   "name": "nococli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Keep your code yours — remove AI co-author signatures from git commits",
   "type": "module",
   "main": "./dist/install.js",
@@ -8,7 +8,7 @@
     "noco": "./dist/cli.js"
   },
   "scripts": {
-    "build": "bun build ./src/*.ts --outdir ./dist --target bun && bun build ./src/*.ts --outdir ./dist --target node",
+    "build": "bun build ./src/cli.ts ./src/install.ts ./src/uninstall.ts ./src/types.ts ./src/utils/logger.ts ./src/utils/paths.ts ./src/utils/hook.ts ./src/utils/git.ts --outdir ./dist --target bun && bun build ./src/cli.ts ./src/install.ts ./src/uninstall.ts ./src/types.ts ./src/utils/logger.ts ./src/utils/paths.ts ./src/utils/hook.ts ./src/utils/git.ts --outdir ./dist --target node",
     "dev": "bun run src/cli.ts",
     "test": "bun test"
   },
