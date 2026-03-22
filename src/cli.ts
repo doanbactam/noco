@@ -1,5 +1,6 @@
 /**
  * CLI interface for git-no-ai-author
+ * Remove AI co-author signatures from git commits
  */
 
 import { Command } from 'commander';
@@ -20,15 +21,15 @@ const program = new Command();
 
 program
   .name('nococli')
-  .description('Keep your code yours')
+  .description('Remove AI co-author signatures from git commits')
   .version('1.0.0');
 
 // Install command
 program
   .command('install')
-  .description('Install noco hook')
-  .option('-f, --force', 'Overwrite existing hook')
-  .option('-s, --silent', 'Silent mode')
+  .description('Install noco hook globally for all new git repositories')
+  .option('-f, --force', 'Overwrite existing hook without prompting')
+  .option('-s, --silent', 'Silent mode - no output')
   .action(async (options) => {
     const tasks = new Listr([
       {
@@ -76,9 +77,9 @@ program
 // Uninstall command
 program
   .command('uninstall')
-  .description('Uninstall noco hook')
+  .description('Remove noco hook from your system')
   .option('-c, --remove-config', 'Also remove git template directory config')
-  .option('-s, --silent', 'Silent mode')
+  .option('-s, --silent', 'Silent mode - no output')
   .action(async (options) => {
     if (!options.silent) {
       const response = await prompts({
@@ -119,7 +120,7 @@ program
 
 program
   .command('status')
-  .description('Check noco status')
+  .description('Check if noco is properly installed and configured')
   .action(async () => {
     logger.header('📊 noco Status');
 
@@ -160,7 +161,7 @@ program
 // List patterns command
 program
   .command('patterns')
-  .description('List all AI signature patterns')
+  .description('List all AI co-author signature patterns that will be removed')
   .action(() => {
     logger.header('🎯 AI Signature Patterns');
     logger.blank();
@@ -174,14 +175,3 @@ program
 
 // Parse arguments
 program.parse();
-
-// If no command, show help and run install
-if (!process.argv.slice(2).length) {
-  program.outputHelp();
-  logger.blank();
-  logger.info('Running install...');
-  logger.blank();
-
-  const { install: runInstall } = await import('./install.js');
-  await runInstall();
-}

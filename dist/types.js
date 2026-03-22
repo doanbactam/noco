@@ -47,20 +47,15 @@ var __esm = (fn, res) => () => (fn && (res = fn(fn = 0)), res);
 var __require = /* @__PURE__ */ createRequire(import.meta.url);
 
 // src/types.ts
-var DEFAULT_AI_PATTERNS;
-var init_types = __esm(() => {
-  DEFAULT_AI_PATTERNS = [
-    { name: "Claude Opus", pattern: "^Co-Authored-By: Claude Opus" },
-    { name: "GitHub Copilot", pattern: "^Co-Authored-By: GitHub Copilot" },
-    { name: "ChatGPT", pattern: "^Co-Authored-By: ChatGPT" },
-    { name: "Anthropic", pattern: "^Co-Authored-By: Anthropic" },
-    { name: "OpenAI", pattern: "^Co-Authored-By: OpenAI" },
-    { name: "Cursor AI", pattern: "^Co-Authored-By: Cursor AI" },
-    { name: "AI Assistant", pattern: "^Co-Authored-By: AI Assistant" }
-  ];
-});
-init_types();
-
+var DEFAULT_AI_PATTERNS = [
+  { name: "Claude Opus", pattern: "^Co-Authored-By: Claude Opus" },
+  { name: "GitHub Copilot", pattern: "^Co-Authored-By: GitHub Copilot" },
+  { name: "ChatGPT", pattern: "^Co-Authored-By: ChatGPT" },
+  { name: "Anthropic", pattern: "^Co-Authored-By: Anthropic" },
+  { name: "OpenAI", pattern: "^Co-Authored-By: OpenAI" },
+  { name: "Cursor AI", pattern: "^Co-Authored-By: Cursor AI" },
+  { name: "AI Assistant", pattern: "^Co-Authored-By: AI Assistant" }
+];
 export {
   DEFAULT_AI_PATTERNS
 };
