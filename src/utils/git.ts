@@ -2,7 +2,7 @@
  * Git utilities
  */
 
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { toGitPath } from './paths.js';
 
 export interface GitConfigResult {
@@ -15,7 +15,7 @@ export interface GitConfigResult {
  */
 export function getGitConfig(key: string): GitConfigResult {
   try {
-    const value = execSync(`git config --global ${key}`, {
+    const value = execFileSync('git', ['config', '--global', key], {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'ignore'],
     }).trim();
@@ -30,7 +30,7 @@ export function getGitConfig(key: string): GitConfigResult {
  * Set a global git config value
  */
 export function setGitConfig(key: string, value: string): void {
-  execSync(`git config --global ${key} '${value}'`, {
+  execFileSync('git', ['config', '--global', key, value], {
     encoding: 'utf-8',
     stdio: ['pipe', 'pipe', 'ignore'],
   });
@@ -41,7 +41,7 @@ export function setGitConfig(key: string, value: string): void {
  */
 export function unsetGitConfig(key: string): void {
   try {
-    execSync(`git config --global --unset ${key}`, {
+    execFileSync('git', ['config', '--global', '--unset', key], {
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'ignore'],
     });

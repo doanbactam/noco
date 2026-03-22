@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { createRequire } from "node:module";
 var __create = Object.create;
 var __getProtoOf = Object.getPrototypeOf;
@@ -11298,10 +11299,10 @@ function getPatternNames() {
 }
 
 // src/utils/git.ts
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 function getGitConfig(key) {
   try {
-    const value = execSync(`git config --global ${key}`, {
+    const value = execFileSync("git", ["config", "--global", key], {
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "ignore"]
     }).trim();
@@ -11311,14 +11312,14 @@ function getGitConfig(key) {
   }
 }
 function setGitConfig(key, value) {
-  execSync(`git config --global ${key} '${value}'`, {
+  execFileSync("git", ["config", "--global", key, value], {
     encoding: "utf-8",
     stdio: ["pipe", "pipe", "ignore"]
   });
 }
 function unsetGitConfig(key) {
   try {
-    execSync(`git config --global --unset ${key}`, {
+    execFileSync("git", ["config", "--global", "--unset", key], {
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "ignore"]
     });
@@ -13533,8 +13534,8 @@ var Listr = class {
 var import_prompts = __toESM(require_prompts3(), 1);
 var logger2 = new Logger;
 var program2 = new Command;
-program2.name("nococli").description("Remove AI co-author signatures from git commits").version("1.0.0");
-program2.command("install").description("Install noco hook globally for all new git repositories").option("-f, --force", "Overwrite existing hook without prompting").option("-s, --silent", "Silent mode - no output").action(async (options) => {
+async function runInstallCommand() {
+  let installResult = null;
   const tasks = new Listr([
     {
       title: "Checking current git configuration",
@@ -13549,9 +13550,12 @@ program2.command("install").description("Install noco hook globally for all new 
     {
       title: "Installing hook",
       task: async () => {
-        const result = await install({ silent: true });
-        if (!result.success) {
-          throw new Error(result.message);
+        installResult = await install({ silent: true });
+        if (!installResult.success) {
+          throw new Error(installResult.message);
+        }
+        if (installResult.needsInit) {
+          return "Hook created, but git template directory still points elsewhere";
         }
       }
     }
@@ -13564,7 +13568,12 @@ program2.command("install").description("Install noco hook globally for all new 
   try {
     await tasks.run();
     logger2.blank();
-    logger2.success("✨ Installation complete!");
+    if (installResult?.needsInit) {
+      logger2.warning("Hook installed, but git is still using another template directory.");
+      logger2.info("Update your global git config, then re-run `git init` in existing repos.");
+    } else {
+      logger2.success("✨ Installation complete!");
+    }
     logger2.blank();
     logger2.info("AI signatures that will be removed:");
     getPatternNames().forEach((p) => logger2.info(`  ${source_default.dim("•")} ${p}`));
@@ -13575,7 +13584,9 @@ program2.command("install").description("Install noco hook globally for all new 
     logger2.error(error instanceof Error ? error.message : "Installation failed");
     process.exit(1);
   }
-});
+}
+program2.name("nococli").description("Remove AI co-author signatures from git commits").version("1.0.1");
+program2.command("install").description("Install noco hook globally for all new git repositories").option("-f, --force", "Overwrite existing hook without prompting").option("-s, --silent", "Silent mode - no output").action(runInstallCommand);
 program2.command("uninstall").description("Remove noco hook from your system").option("-c, --remove-config", "Also remove git template directory config").option("-s, --silent", "Silent mode - no output").action(async (options) => {
   if (!options.silent) {
     const response = await import_prompts.default({
@@ -13650,4 +13661,8 @@ program2.command("patterns").description("List all AI co-author signature patter
   logger2.table(["Status", "Pattern"], table);
   logger2.info(`${patterns.length} patterns will be removed from commits`);
 });
-program2.parse();
+if (process.argv.length <= 2) {
+  await runInstallCommand();
+} else {
+  program2.parse();
+}

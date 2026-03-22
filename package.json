@@ -8,9 +8,10 @@
     "noco": "./dist/cli.js"
   },
   "scripts": {
-    "build": "bun build ./src/cli.ts ./src/install.ts ./src/uninstall.ts ./src/types.ts ./src/utils/logger.ts ./src/utils/paths.ts ./src/utils/hook.ts ./src/utils/git.ts --outdir ./dist --target bun && bun build ./src/cli.ts ./src/install.ts ./src/uninstall.ts ./src/types.ts ./src/utils/logger.ts ./src/utils/paths.ts ./src/utils/hook.ts ./src/utils/git.ts --outdir ./dist --target node",
+    "build": "bun build ./src/cli.ts ./src/install.ts ./src/uninstall.ts ./src/types.ts ./src/utils/logger.ts ./src/utils/paths.ts ./src/utils/hook.ts ./src/utils/git.ts --outdir ./dist --target bun && bun build ./src/cli.ts ./src/install.ts ./src/uninstall.ts ./src/types.ts ./src/utils/logger.ts ./src/utils/paths.ts ./src/utils/hook.ts ./src/utils/git.ts --outdir ./dist --target node && node -e \"const fs=require('fs'); const p='./dist/cli.js'; fs.writeFileSync(p, '#!/usr/bin/env node\\n' + fs.readFileSync(p, 'utf8'));\"",
     "dev": "bun run src/cli.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "test:e2e": "node ./scripts/e2e-install.mjs"
   },
   "keywords": [
     "git",

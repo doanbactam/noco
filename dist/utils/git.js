@@ -77,10 +77,10 @@ async function pathExists(filePath) {
 }
 
 // src/utils/git.ts
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 function getGitConfig(key) {
   try {
-    const value = execSync(`git config --global ${key}`, {
+    const value = execFileSync("git", ["config", "--global", key], {
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "ignore"]
     }).trim();
@@ -90,14 +90,14 @@ function getGitConfig(key) {
   }
 }
 function setGitConfig(key, value) {
-  execSync(`git config --global ${key} '${value}'`, {
+  execFileSync("git", ["config", "--global", key, value], {
     encoding: "utf-8",
     stdio: ["pipe", "pipe", "ignore"]
   });
 }
 function unsetGitConfig(key) {
   try {
-    execSync(`git config --global --unset ${key}`, {
+    execFileSync("git", ["config", "--global", "--unset", key], {
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "ignore"]
     });

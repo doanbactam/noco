@@ -19,10 +19,67 @@ const logger = new Logger();
 // Create CLI program
 const program = new Command();
 
+async function runInstallCommand(): Promise<void> {
+  let installResult: Awaited<ReturnType<typeof install>> | null = null;
+
+  const tasks = new Listr([
+    {
+      title: 'Checking current git configuration',
+      task: async () => {
+        const current = getTemplateDir();
+        if (current.exists && current.value) {
+          return `Current template: ${chalk.cyan(current.value)}`;
+        }
+        return 'No existing template directory found';
+      },
+    },
+    {
+      title: 'Installing hook',
+      task: async () => {
+        installResult = await install({ silent: true });
+        if (!installResult.success) {
+          throw new Error(installResult.message);
+        }
+
+        if (installResult.needsInit) {
+          return 'Hook created, but git template directory still points elsewhere';
+        }
+      },
+    },
+  ], {
+    rendererOptions: {
+      collapse: false,
+      showSubtasks: false,
+    },
+  });
+
+  try {
+    await tasks.run();
+    logger.blank();
+
+    if (installResult?.needsInit) {
+      logger.warning('Hook installed, but git is still using another template directory.');
+      logger.info('Update your global git config, then re-run `git init` in existing repos.');
+    } else {
+      logger.success('✨ Installation complete!');
+    }
+
+    logger.blank();
+    logger.info('AI signatures that will be removed:');
+    getPatternNames().forEach(p => logger.info(`  ${chalk.dim('•')} ${p}`));
+    logger.blank();
+    logger.info(chalk.dim('For existing repos, run: cd <repo> && git init'));
+  } catch (error) {
+    logger.blank();
+    logger.error(error instanceof Error ? error.message : 'Installation failed');
+    process.exit(1);
+  }
+}
+
 program
   .name('nococli')
   .description('Remove AI co-author signatures from git commits')
-  .version('1.0.0');
+  .version('1.0.1');
 
 // Install command
 program
@@ -30,49 +87,7 @@ program
   .description('Install noco hook globally for all new git repositories')
   .option('-f, --force', 'Overwrite existing hook without prompting')
   .option('-s, --silent', 'Silent mode - no output')
-  .action(async (options) => {
-    const tasks = new Listr([
-      {
-        title: 'Checking current git configuration',
-        task: async () => {
-          const current = getTemplateDir();
-          if (current.exists && current.value) {
-            return `Current template: ${chalk.cyan(current.value)}`;
-          }
-          return 'No existing template directory found';
-        },
-      },
-      {
-        title: 'Installing hook',
-        task: async () => {
-          const result = await install({ silent: true });
-          if (!result.success) {
-            throw new Error(result.message);
-          }
-        },
-      },
-    ], {
-      rendererOptions: {
-        collapse: false,
-        showSubtasks: false,
-      },
-    });
-
-    try {
-      await tasks.run();
-      logger.blank();
-      logger.success('✨ Installation complete!');
-      logger.blank();
-      logger.info('AI signatures that will be removed:');
-      getPatternNames().forEach(p => logger.info(`  ${chalk.dim('•')} ${p}`));
-      logger.blank();
-      logger.info(chalk.dim('For existing repos, run: cd <repo> && git init'));
-    } catch (error) {
-      logger.blank();
-      logger.error(error instanceof Error ? error.message : 'Installation failed');
-      process.exit(1);
-    }
-  });
+  .action(runInstallCommand);
 
 // Uninstall command
 program
@@ -174,4 +189,8 @@ program
   });
 
 // Parse arguments
-program.parse();
+if (process.argv.length <= 2) {
+  await runInstallCommand();
+} else {
+  program.parse();
+}
