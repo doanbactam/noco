@@ -1,0 +1,17 @@
+#!/bin/bash
+# git-no-ai-author: Remove AI co-author signatures from commit messages
+# Installed by npx git-no-ai-author
+
+COMMIT_MSG_FILE=$1
+
+# Patterns to remove - add more as needed
+sed -i '/^Co-Authored-By: Claude Opus/d' "$COMMIT_MSG_FILE"
+sed -i '/^Co-Authored-By: GitHub Copilot/d' "$COMMIT_MSG_FILE"
+sed -i '/^Co-Authored-By: ChatGPT/d' "$COMMIT_MSG_FILE"
+sed -i '/^Co-Authored-By: Anthropic/d' "$COMMIT_MSG_FILE"
+sed -i '/^Co-Authored-By: OpenAI/d' "$COMMIT_MSG_FILE"
+sed -i '/^Co-Authored-By: Cursor AI/d' "$COMMIT_MSG_FILE"
+sed -i '/^Co-Authored-By: AI Assistant/d' "$COMMIT_MSG_FILE"
+
+# Also remove any empty lines at the end
+sed -i -e :a -e '/^\\n*$/{$d;N;ba' -e '}' "$COMMIT_MSG_FILE"
