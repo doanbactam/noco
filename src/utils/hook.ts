@@ -29,8 +29,8 @@ COMMIT_MSG_FILE=$1
 # AI patterns to remove from commit messages
 ${sedCommands}
 
-# Remove trailing empty lines
-sed -i -e :a -e '/^$/{$d;N;ba' -e '}' "$COMMIT_MSG_FILE"
+# Remove trailing empty lines (handles whitespace-only lines too)
+sed -i -e :a -e '/^[[:space:]]*$/{$d;N;ba' -e '}' "$COMMIT_MSG_FILE"
 `;
 }
 
