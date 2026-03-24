@@ -1,0 +1,29 @@
+{
+  "featureId": "sync-static-and-generated-hooks",
+  "milestone": "core-pattern-fix",
+  "reviewerSessionId": "b5213e80-2f41-4069-a5e6-c669329c43f2",
+  "status": "pass",
+  "summary": "Static hook file removed; generated hook content is now the single source of truth.",
+  "implementationReview": {
+    "approach": "Removed the unused static hooks/commit-msg file since install.ts uses generateHookContent() directly.",
+    "filesModified": ["hooks/commit-msg (deleted)"],
+    "changesVerified": true
+  },
+  "fulfillmentCheck": {
+    "assertionId": "VAL-INSTALL-002",
+    "requirements": [
+      "Ensure static hook and generated hook are consistent",
+      "Eliminate potential confusion from having both"
+    ],
+    "verified": true,
+    "notes": "The hooks/ directory no longer exists. The generated hook content from src/utils/hook.ts is the single source of truth, eliminating sync issues."
+  },
+  "issues": [],
+  "sharedStateObservations": [
+    {
+      "observation": "Static hook file removed. All hook content is now generated programmatically from src/utils/hook.ts.",
+      "category": "library",
+      "suggestedAction": "Document that hook content is generated dynamically, not from a static file."
+    }
+  ]
+}

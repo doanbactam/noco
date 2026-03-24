@@ -1,0 +1,67 @@
+{
+  "milestone": "core-pattern-fix",
+  "round": 1,
+  "status": "pass",
+  "validatorsRun": {
+    "test": {
+      "passed": true,
+      "command": "bun test",
+      "exitCode": 0,
+      "output": "10 tests passed in src/utils/hook.test.ts covering whitespace variations and hook content generation"
+    },
+    "typecheck": {
+      "passed": false,
+      "command": "npx -p typescript tsc --noEmit",
+      "exitCode": 1,
+      "output": "3 pre-existing TypeScript errors in src/cli.ts and src/utils/logger.ts related to listr2 and ora type definitions. These are NOT caused by core-pattern-fix changes - the modified files (types.ts, hook.ts, hook.test.ts) are type-safe.",
+      "note": "Pre-existing issues unrelated to this milestone"
+    },
+    "lint": {
+      "passed": true,
+      "command": "n/a",
+      "exitCode": 0,
+      "output": "No ESLint configuration in project - lint not applicable"
+    }
+  },
+  "reviewsSummary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "failedFeatures": []
+  },
+  "blockingIssues": [],
+  "appliedUpdates": [
+    {
+      "target": "library",
+      "file": ".factory/library/architecture.md",
+      "description": "Updated project structure to remove hooks/commit-msg reference and add hook.test.ts. Added note that hook content is generated dynamically.",
+      "sourceFeature": "sync-static-and-generated-hooks"
+    }
+  ],
+  "suggestedGuidanceUpdates": [],
+  "rejectedObservations": [
+    {
+      "observation": "The pattern uses a single combined regex with alternation. As more AI names are added, the regex could become unwieldy.",
+      "reason": "Future consideration, not actionable for current milestone. Pattern is manageable with current ~20 AI names."
+    }
+  ],
+  "previousRound": null,
+  "featureReviews": {
+    "fix-case-insensitive-pattern": {
+      "status": "pass",
+      "keyFindings": "Case-insensitive matching implemented using character classes [Cc][Oo]-[Aa]... which is portable across sed implementations"
+    },
+    "expand-ai-name-list": {
+      "status": "pass",
+      "keyFindings": "Added Factory Droid, Gemini, Perplexity, Amazon Q, Amp with proper escaping for special characters"
+    },
+    "fix-whitespace-handling": {
+      "status": "pass",
+      "keyFindings": "Pattern handles leading whitespace, flexible colon spacing, tabs. Unit tests cover 8 whitespace scenarios."
+    },
+    "sync-static-and-generated-hooks": {
+      "status": "pass",
+      "keyFindings": "Static hooks/commit-msg removed. generateHookContent() is now single source of truth."
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "featureId": "expand-ai-name-list",
+  "milestone": "core-pattern-fix",
+  "reviewerSessionId": "b5213e80-2f41-4069-a5e6-c669329c43f2",
+  "status": "pass",
+  "summary": "All required AI assistant names added to the pattern.",
+  "implementationReview": {
+    "approach": "Added AI names directly to the regex alternation group in AI_PATTERN_REGEX.",
+    "filesModified": ["src/types.ts"],
+    "changesVerified": true
+  },
+  "fulfillmentCheck": {
+    "assertionId": "VAL-PATTERN-002",
+    "requirements": [
+      "Add Factory Droid (including factory-droid[bot])",
+      "Add Gemini (including Google Gemini, Gemini Pro)",
+      "Add Perplexity (including Perplexity AI)",
+      "Add Amazon Q",
+      "Add Amp (including Amp AI)"
+    ],
+    "verified": true,
+    "notes": "Pattern now includes: Factory Droid, factory-droid[bot], Gemini, Google Gemini, Gemini Pro, Perplexity, Perplexity AI, Amazon Q, Amp, Amp AI. All escape special characters properly (e.g., \\[ and \\] for brackets)."
+  },
+  "issues": [],
+  "sharedStateObservations": [
+    {
+      "observation": "The pattern uses a single combined regex with alternation. As more AI names are added, the regex could become unwieldy.",
+      "category": "future-consideration",
+      "suggestedAction": "Consider documenting the process for adding new AI names to the pattern."
+    }
+  ]
+}
