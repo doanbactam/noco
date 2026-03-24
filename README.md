@@ -62,7 +62,7 @@ noco
 
 ## npm Package
 
-[nococli](https://www.npmjs.com/package/nococli) - A package manager for JavaScript, included with Node.js. npm makes it easy for developers to share and reuse code.
+[nococli](https://www.npmjs.com/package/nococli) - Published on npm, the package manager for JavaScript.
 
 ---
 
