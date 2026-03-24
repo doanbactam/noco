@@ -17,16 +17,28 @@ That's it.
 ## Supported AI Signatures
 
 Removes co-author signatures from:
-- Claude (all versions)
-- GitHub Copilot
-- ChatGPT / OpenAI
-- Cursor AI
-- Tabnine
-- CodeWhisperer
-- Codeium
-- Replit Ghostwriter
-- Sourcegraph Cody
-- And more...
+
+- **Claude** (Claude, Claude Code, Claude 3, Claude 3.5, Claude Sonnet, Claude Opus)
+- **GitHub Copilot**
+- **ChatGPT / OpenAI** (ChatGPT, GPT-4, ChatGPT-4o)
+- **Cursor AI**
+- **Tabnine**
+- **CodeWhisperer / Amazon CodeWhisperer**
+- **Codeium**
+- **Replit Ghostwriter**
+- **Sourcegraph Cody / Cody**
+- **Factory Droid** (factory-droid, factory-droid[bot])
+- **Gemini / Google Gemini** (Gemini Pro, Gemini 1.5)
+- **Perplexity AI**
+- **Amazon Q**
+- **Amp / Amp AI**
+
+### Pattern Matching Features
+
+- **Case-insensitive** matching for "Co-Authored-By" lines
+- **Flexible whitespace** handling (spaces, tabs, no space after colon)
+- **Version number** support (e.g., "Claude 3.5 Sonnet", "GPT-4")
+- **Email format** variations handled
 
 ## Requirements
 
