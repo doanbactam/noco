@@ -54,6 +54,43 @@ var DEFAULT_AI_PATTERNS = [
     pattern: AI_PATTERN_REGEX
   }
 ];
+var AI_AUTHOR_NAMES = [
+  "claude",
+  "claude code",
+  "claude opus",
+  "claude sonnet",
+  "claude haiku",
+  "anthropic",
+  "github copilot",
+  "copilot",
+  "chatgpt",
+  "openai",
+  "cursor ai",
+  "cursor",
+  "tabnine",
+  "codewhisperer",
+  "codeium",
+  "replit ghostwriter",
+  "sourcegraph cody",
+  "cody",
+  "factory droid",
+  "factory-droid",
+  "factory-droid[bot]",
+  "gemini",
+  "google gemini",
+  "perplexity",
+  "perplexity ai",
+  "amazon q",
+  "amp",
+  "amp ai",
+  "ai assistant"
+];
+function isAIAuthor(name) {
+  const lowerName = name.toLowerCase().trim();
+  return AI_AUTHOR_NAMES.some((aiName) => lowerName.includes(aiName.toLowerCase()));
+}
 export {
-  DEFAULT_AI_PATTERNS
+  isAIAuthor,
+  DEFAULT_AI_PATTERNS,
+  AI_AUTHOR_NAMES
 };

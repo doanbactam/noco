@@ -41,3 +41,41 @@ export const DEFAULT_AI_PATTERNS: readonly AI_PATTERN[] = [
     pattern: AI_PATTERN_REGEX,
   },
 ] as const;
+
+// AI author names to detect and replace (case-insensitive)
+export const AI_AUTHOR_NAMES = [
+  'claude',
+  'claude code',
+  'claude opus',
+  'claude sonnet',
+  'claude haiku',
+  'anthropic',
+  'github copilot',
+  'copilot',
+  'chatgpt',
+  'openai',
+  'cursor ai',
+  'cursor',
+  'tabnine',
+  'codewhisperer',
+  'codeium',
+  'replit ghostwriter',
+  'sourcegraph cody',
+  'cody',
+  'factory droid',
+  'factory-droid',
+  'factory-droid[bot]',
+  'gemini',
+  'google gemini',
+  'perplexity',
+  'perplexity ai',
+  'amazon q',
+  'amp',
+  'amp ai',
+  'ai assistant',
+] as const;
+
+export function isAIAuthor(name: string): boolean {
+  const lowerName = name.toLowerCase().trim();
+  return AI_AUTHOR_NAMES.some(aiName => lowerName.includes(aiName.toLowerCase()));
+}

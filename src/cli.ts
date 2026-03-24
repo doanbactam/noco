@@ -8,9 +8,10 @@ import chalk from 'chalk';
 import { install } from './install.js';
 import { uninstall } from './uninstall.js';
 import { getPatternNames } from './utils/hook.js';
-import { getTemplateDir } from './utils/git.js';
+import { getTemplateDir, getGitUserName, getGitUserEmail, setGitUserName, setGitUserEmail } from './utils/git.js';
 import { getConfig } from './utils/paths.js';
 import { Logger } from './utils/logger.js';
+import { isAIAuthor } from './types.js';
 import { Listr } from 'listr2';
 import prompts from 'prompts';
 
@@ -21,6 +22,53 @@ const program = new Command();
 
 async function runInstallCommand(): Promise<void> {
   let installResult: Awaited<ReturnType<typeof install>> | null = null;
+
+  // Check if current git author is an AI
+  const currentName = getGitUserName();
+  const currentEmail = getGitUserEmail();
+
+  if (currentName.exists && currentName.value && isAIAuthor(currentName.value)) {
+    logger.header('🤖 AI Author Detected');
+    logger.blank();
+    logger.warning(`Current git author: ${chalk.yellow(currentName.value)}`);
+    logger.info('This looks like an AI-generated name. Would you like to change it?');
+    logger.blank();
+
+    const response = await prompts([
+      {
+        type: 'text',
+        name: 'name',
+        message: 'Your name',
+        initial: '',
+        validate: (value: string) => value.trim().length > 0 ? true : 'Name is required',
+      },
+      {
+        type: 'text',
+        name: 'email',
+        message: 'Your email',
+        initial: '',
+        validate: (value: string) => {
+          if (value.trim().length === 0) return 'Email is required';
+          if (!value.includes('@')) return 'Please enter a valid email';
+          return true;
+        },
+      },
+    ]);
+
+    if (response.name && response.email) {
+      setGitUserName(response.name.trim());
+      setGitUserEmail(response.email.trim());
+      logger.blank();
+      logger.success(`✓ Git author updated to: ${chalk.cyan(response.name)} <${chalk.cyan(response.email)}>`);
+      logger.blank();
+    } else {
+      logger.blank();
+      logger.info('Skipped author update. You can change it later with:');
+      logger.info(`  ${chalk.dim('git config --global user.name "Your Name"')}`);
+      logger.info(`  ${chalk.dim('git config --global user.email "your@email.com"')}`);
+      logger.blank();
+    }
+  }
 
   const tasks = new Listr([
     {

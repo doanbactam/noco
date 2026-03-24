@@ -64,3 +64,57 @@ export function setTemplateDir(templatePath: string): void {
   const gitPath = toGitPath(templatePath);
   setGitConfig('init.templatedir', gitPath);
 }
+
+/**
+ * Get current git user name (check global first, then local)
+ */
+export function getGitUserName(): GitConfigResult {
+  // Try global first
+  const global = getGitConfig('user.name');
+  if (global.exists) return global;
+
+  // Fallback to local
+  try {
+    const value = execFileSync('git', ['config', 'user.name'], {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'ignore'],
+    }).trim();
+    return { exists: true, value };
+  } catch {
+    return { exists: false, value: null };
+  }
+}
+
+/**
+ * Get current git user email (check global first, then local)
+ */
+export function getGitUserEmail(): GitConfigResult {
+  // Try global first
+  const global = getGitConfig('user.email');
+  if (global.exists) return global;
+
+  // Fallback to local
+  try {
+    const value = execFileSync('git', ['config', 'user.email'], {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'ignore'],
+    }).trim();
+    return { exists: true, value };
+  } catch {
+    return { exists: false, value: null };
+  }
+}
+
+/**
+ * Set git user name globally
+ */
+export function setGitUserName(name: string): void {
+  setGitConfig('user.name', name);
+}
+
+/**
+ * Set git user email globally
+ */
+export function setGitUserEmail(email: string): void {
+  setGitConfig('user.email', email);
+}

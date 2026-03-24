@@ -110,10 +110,48 @@ function setTemplateDir(templatePath) {
   const gitPath = toGitPath(templatePath);
   setGitConfig("init.templatedir", gitPath);
 }
+function getGitUserName() {
+  const global = getGitConfig("user.name");
+  if (global.exists)
+    return global;
+  try {
+    const value = execFileSync("git", ["config", "user.name"], {
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "ignore"]
+    }).trim();
+    return { exists: true, value };
+  } catch {
+    return { exists: false, value: null };
+  }
+}
+function getGitUserEmail() {
+  const global = getGitConfig("user.email");
+  if (global.exists)
+    return global;
+  try {
+    const value = execFileSync("git", ["config", "user.email"], {
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "ignore"]
+    }).trim();
+    return { exists: true, value };
+  } catch {
+    return { exists: false, value: null };
+  }
+}
+function setGitUserName(name) {
+  setGitConfig("user.name", name);
+}
+function setGitUserEmail(email) {
+  setGitConfig("user.email", email);
+}
 export {
   unsetGitConfig,
   setTemplateDir,
+  setGitUserName,
+  setGitUserEmail,
   setGitConfig,
   getTemplateDir,
+  getGitUserName,
+  getGitUserEmail,
   getGitConfig
 };

@@ -3,10 +3,12 @@
  */
 
 import fs from 'fs/promises';
+import prompts from 'prompts';
 import { Logger } from './utils/logger.js';
 import { getConfig, toGitPath } from './utils/paths.js';
 import { generateHookContent, getPatternNames } from './utils/hook.js';
-import { getTemplateDir, setTemplateDir } from './utils/git.js';
+import { getTemplateDir, setTemplateDir, getGitUserName, getGitUserEmail, setGitUserName, setGitUserEmail } from './utils/git.js';
+import { isAIAuthor } from './types.js';
 import type { InstallOptions } from './types.js';
 
 export interface InstallResult {
@@ -80,6 +82,45 @@ export async function main(): Promise<void> {
 
   logger.header('🚀 git-no-ai-author');
   logger.blank();
+
+  // Check if current git author is an AI
+  const currentName = getGitUserName();
+  const currentEmail = getGitUserEmail();
+
+  if (currentName.exists && currentName.value && isAIAuthor(currentName.value)) {
+    logger.warning(`Detected AI author: ${currentName.value}`);
+    logger.info('Would you like to change it to your real name?');
+    logger.blank();
+
+    const response = await prompts([
+      {
+        type: 'text',
+        name: 'name',
+        message: 'Your name',
+        initial: '',
+      },
+      {
+        type: 'text',
+        name: 'email',
+        message: 'Your email',
+        initial: '',
+      },
+    ]);
+
+    if (response.name && response.email) {
+      setGitUserName(response.name);
+      setGitUserEmail(response.email);
+      logger.blank();
+      logger.success(`✓ Git author updated to: ${response.name} <${response.email}>`);
+      logger.blank();
+    } else {
+      logger.blank();
+      logger.info('Skipped author update. You can change it later with:');
+      logger.info('  git config --global user.name "Your Name"');
+      logger.info('  git config --global user.email "your@email.com"');
+      logger.blank();
+    }
+  }
 
   const result = await install();
 
