@@ -21,7 +21,7 @@ export function getGitConfig(key: string): GitConfigResult {
     }).trim();
 
     return { exists: true, value };
-  } catch (error) {
+  } catch {
     return { exists: false, value: null };
   }
 }

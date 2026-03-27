@@ -1,5 +1,5 @@
 /**
- * Uninstall git-no-ai-author hook
+ * Uninstall nococli hook
  */
 
 import fs from 'fs/promises';
@@ -20,16 +20,19 @@ export async function uninstall(options: UninstallOptions = {}): Promise<Uninsta
   let removedConfig = false;
 
   try {
-    logger.start('Removing hook file...');
+    logger.info('Removing hook file...');
     try {
       await fs.unlink(config.hookFile);
-      logger.succeed(`Removed ${config.hookFile}`);
+      logger.success(`Removed ${config.hookFile}`);
     } catch {
       logger.info('Hook file not found (already removed?)');
     }
 
     try {
-      const hooksExists = await fs.access(config.hooksDir).then(() => true).catch(() => false);
+      const hooksExists = await fs
+        .access(config.hooksDir)
+        .then(() => true)
+        .catch(() => false);
       if (hooksExists) {
         const files = await fs.readdir(config.hooksDir);
         if (files.length === 0) {
@@ -38,7 +41,10 @@ export async function uninstall(options: UninstallOptions = {}): Promise<Uninsta
         }
       }
 
-      const templateExists = await fs.access(config.templateDir).then(() => true).catch(() => false);
+      const templateExists = await fs
+        .access(config.templateDir)
+        .then(() => true)
+        .catch(() => false);
       if (templateExists) {
         const files = await fs.readdir(config.templateDir);
         if (files.length === 0) {
@@ -51,14 +57,11 @@ export async function uninstall(options: UninstallOptions = {}): Promise<Uninsta
     }
 
     if (options.removeConfig) {
-      logger.start('Removing git configuration...');
+      logger.info('Removing git configuration...');
       unsetGitConfig('init.templatedir');
       removedConfig = true;
-      logger.succeed('Git template directory configuration removed');
+      logger.success('Git template directory configuration removed');
     }
-
-    logger.blank();
-    logger.success('✨ Uninstallation complete!');
 
     if (!options.removeConfig) {
       logger.blank();
@@ -70,12 +73,11 @@ export async function uninstall(options: UninstallOptions = {}): Promise<Uninsta
 
     return {
       success: true,
-      message: 'Successfully uninstalled git-no-ai-author',
+      message: 'Successfully uninstalled nococli',
       removedConfig,
     };
-
   } catch (error) {
-    logger.fail('Uninstallation failed');
+    logger.error('Uninstallation failed');
     if (error instanceof Error) {
       logger.error(error.message);
     }
@@ -83,22 +85,5 @@ export async function uninstall(options: UninstallOptions = {}): Promise<Uninsta
       success: false,
       message: error instanceof Error ? error.message : 'Unknown error',
     };
-  }
-}
-
-export async function main(): Promise<void> {
-  const logger = new Logger();
-
-  logger.header('🗑️  git-no-ai-author Uninstall');
-  logger.blank();
-
-  const result = await uninstall();
-
-  if (result.success) {
-    process.exit(0);
-  } else {
-    logger.blank();
-    logger.error('Uninstallation failed. Please try again.');
-    process.exit(1);
   }
 }

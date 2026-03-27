@@ -1,133 +1,116 @@
 /**
- * CLI interface for git-no-ai-author
+ * CLI interface for nococli
  * Remove AI co-author signatures from git commits
  */
 
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { createInterface } from 'readline/promises';
 import { Command } from 'commander';
-import chalk from 'chalk';
 import { install } from './install.js';
 import { uninstall } from './uninstall.js';
 import { getPatternNames } from './utils/hook.js';
-import { getTemplateDir, getGitUserName, getGitUserEmail, setGitUserName, setGitUserEmail } from './utils/git.js';
+import { getTemplateDir, getGitUserName, setGitUserName, setGitUserEmail } from './utils/git.js';
 import { getConfig } from './utils/paths.js';
 import { Logger } from './utils/logger.js';
 import { isAIAuthor } from './types.js';
-import { Listr } from 'listr2';
-import prompts from 'prompts';
+import { access } from 'fs/promises';
 
 const logger = new Logger();
 
-// Create CLI program
+// Read version from package.json
+const __dirname = dirname(fileURLToPath(import.meta.url));
+let version = '0.0.0';
+try {
+  const pkg = JSON.parse(readFileSync(join(__dirname, '..', 'package.json'), 'utf8'));
+  version = pkg.version;
+} catch {
+  // Fallback for bundled output
+}
+
 const program = new Command();
 
-async function runInstallCommand(): Promise<void> {
-  let installResult: Awaited<ReturnType<typeof install>> | null = null;
+async function promptText(message: string, initial = ''): Promise<string> {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const answer = await rl.question(`${message}${initial ? ` (${initial})` : ''}: `);
+  rl.close();
+  return answer.trim() || initial;
+}
 
+async function promptConfirm(message: string): Promise<boolean> {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const answer = await rl.question(`${message} (y/N): `);
+  rl.close();
+  return answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes';
+}
+
+async function runInstallCommand(options: { force?: boolean; silent?: boolean }): Promise<void> {
   // Check if current git author is an AI
   const currentName = getGitUserName();
-  const currentEmail = getGitUserEmail();
 
   if (currentName.exists && currentName.value && isAIAuthor(currentName.value)) {
-    logger.header('🤖 AI Author Detected');
+    logger.header('AI Author Detected');
     logger.blank();
-    logger.warning(`Current git author: ${chalk.yellow(currentName.value)}`);
+    logger.warning(`Current git author: ${logger.yellowText(currentName.value)}`);
     logger.info('This looks like an AI-generated name. Would you like to change it?');
     logger.blank();
 
-    const response = await prompts([
-      {
-        type: 'text',
-        name: 'name',
-        message: 'Your name',
-        initial: '',
-        validate: (value: string) => value.trim().length > 0 ? true : 'Name is required',
-      },
-      {
-        type: 'text',
-        name: 'email',
-        message: 'Your email',
-        initial: '',
-        validate: (value: string) => {
-          if (value.trim().length === 0) return 'Email is required';
-          if (!value.includes('@')) return 'Please enter a valid email';
-          return true;
-        },
-      },
-    ]);
+    const name = await promptText('Your name');
+    const email = await promptText('Your email');
 
-    if (response.name && response.email) {
-      setGitUserName(response.name.trim());
-      setGitUserEmail(response.email.trim());
+    if (name && email) {
+      setGitUserName(name);
+      setGitUserEmail(email);
       logger.blank();
-      logger.success(`✓ Git author updated to: ${chalk.cyan(response.name)} <${chalk.cyan(response.email)}>`);
+      logger.success(`Git author updated to: ${logger.cyan(name)} <${logger.cyan(email)}>`);
       logger.blank();
     } else {
       logger.blank();
       logger.info('Skipped author update. You can change it later with:');
-      logger.info(`  ${chalk.dim('git config --global user.name "Your Name"')}`);
-      logger.info(`  ${chalk.dim('git config --global user.email "your@email.com"')}`);
+      logger.info(`  ${logger.dim('git config --global user.name "Your Name"')}`);
+      logger.info(`  ${logger.dim('git config --global user.email "your@email.com"')}`);
       logger.blank();
     }
   }
 
-  const tasks = new Listr([
-    {
-      title: 'Checking current git configuration',
-      task: async () => {
-        const current = getTemplateDir();
-        if (current.exists && current.value) {
-          return `Current template: ${chalk.cyan(current.value)}`;
-        }
-        return 'No existing template directory found';
-      },
-    },
-    {
-      title: 'Installing hook',
-      task: async () => {
-        installResult = await install({ silent: true });
-        if (!installResult.success) {
-          throw new Error(installResult.message);
-        }
+  // Check current config
+  const current = getTemplateDir();
+  if (current.exists && current.value) {
+    logger.info(`Current template: ${logger.cyan(current.value)}`);
+  } else {
+    logger.info('No existing template directory found');
+  }
 
-        if (installResult.needsInit) {
-          return 'Hook created, but git template directory still points elsewhere';
-        }
-      },
-    },
-  ], {
-    rendererOptions: {
-      collapse: false,
-      showSubtasks: false,
-    },
-  });
+  // Install
+  const result = await install({ silent: options.silent });
 
-  try {
-    await tasks.run();
+  if (!result.success) {
     logger.blank();
-
-    if (installResult?.needsInit) {
-      logger.warning('Hook installed, but git is still using another template directory.');
-      logger.info('Update your global git config, then re-run `git init` in existing repos.');
-    } else {
-      logger.success('✨ Installation complete!');
-    }
-
-    logger.blank();
-    logger.info('AI signatures that will be removed:');
-    getPatternNames().forEach(p => logger.info(`  ${chalk.dim('•')} ${p}`));
-    logger.blank();
-    logger.info(chalk.dim('For existing repos, run: cd <repo> && git init'));
-  } catch (error) {
-    logger.blank();
-    logger.error(error instanceof Error ? error.message : 'Installation failed');
+    logger.error(result.message);
     process.exit(1);
   }
+
+  logger.blank();
+
+  if (result.needsInit) {
+    logger.warning('Hook installed, but git is still using another template directory.');
+    logger.info('Update your global git config, then re-run `git init` in existing repos.');
+  } else {
+    logger.success('Installation complete!');
+  }
+
+  logger.blank();
+  logger.info('AI signatures that will be removed:');
+  getPatternNames().forEach((p) => logger.info(`  ${logger.dim('\u2022')} ${p}`));
+  logger.blank();
+  logger.info(logger.dim('For existing repos, run: cd <repo> && git init'));
 }
 
 program
   .name('nococli')
   .description('Remove AI co-author signatures from git commits')
-  .version('1.0.2');
+  .version(version);
 
 // Install command
 program
@@ -145,80 +128,49 @@ program
   .option('-s, --silent', 'Silent mode - no output')
   .action(async (options) => {
     if (!options.silent) {
-      const response = await prompts({
-        type: 'confirm',
-        name: 'confirm',
-        message: 'Uninstall noco?',
-        initial: false,
-      });
-
-      if (!response.confirm) {
+      const confirmed = await promptConfirm('Uninstall noco?');
+      if (!confirmed) {
         logger.info('Uninstall cancelled');
         process.exit(0);
       }
     }
 
-    const tasks = new Listr([
-      {
-        title: 'Removing hook file',
-        task: async () => {
-          const result = await uninstall({ silent: true });
-          if (!result.success) {
-            throw new Error(result.message);
-          }
-        },
-      },
-    ]);
-
-    try {
-      await tasks.run();
+    const result = await uninstall({ silent: options.silent });
+    if (result.success) {
       logger.blank();
-      logger.success('✨ Uninstallation complete!');
-    } catch (error) {
+      logger.success('Uninstallation complete!');
+    } else {
       logger.blank();
-      logger.error(error instanceof Error ? error.message : 'Uninstallation failed');
+      logger.error(result.message);
       process.exit(1);
     }
   });
 
+// Status command
 program
   .command('status')
   .description('Check if noco is properly installed and configured')
   .action(async () => {
-    logger.header('📊 noco Status');
+    logger.header('noco Status');
 
-    const tasks = new Listr([
-      {
-        title: 'Checking installation status',
-        task: async () => {
-          const current = getTemplateDir();
-          if (current.exists && current.value) {
-            return chalk.green(`✓ Installed at ${current.value}`);
-          }
-          return chalk.yellow('✗ Not installed');
-        },
-      },
-      {
-        title: 'Checking hook file',
-        task: async () => {
-          const fs = await import('fs/promises');
-          const config = getConfig();
+    const current = getTemplateDir();
+    if (current.exists && current.value) {
+      logger.success(`Installed at ${current.value}`);
+    } else {
+      logger.warning('Not installed');
+    }
 
-          try {
-            await fs.access(config.hookFile);
-            return chalk.green('✓ Hook file exists');
-          } catch {
-            return chalk.yellow('✗ Hook file not found');
-          }
-        },
-      },
-    ]);
-
-    await tasks.run();
+    const config = getConfig();
+    try {
+      await access(config.hookFile);
+      logger.success('Hook file exists');
+    } catch {
+      logger.warning('Hook file not found');
+    }
 
     logger.blank();
-    logger.info(chalk.bold('Supported AI signatures:'));
-    getPatternNames().forEach(p => logger.info(`  ${chalk.dim('•')} ${p}`));
+    logger.info(logger.bold('Supported AI signatures:'));
+    getPatternNames().forEach((p) => logger.info(`  ${logger.dim('\u2022')} ${p}`));
   });
 
 // List patterns command
@@ -226,14 +178,14 @@ program
   .command('patterns')
   .description('List all AI co-author signature patterns that will be removed')
   .action(() => {
-    logger.header('🎯 AI Signature Patterns');
+    logger.header('AI Signature Patterns');
     logger.blank();
 
     const patterns = getPatternNames();
-    const table = patterns.map(p => [chalk.cyan('✓'), p]);
-    logger.table(['Status', 'Pattern'], table);
+    patterns.forEach((p) => logger.success(p));
 
-    logger.info(`${patterns.length} patterns will be removed from commits`);
+    logger.blank();
+    logger.info(`${patterns.length} pattern groups will be removed from commits`);
   });
 
 // Setup author command
@@ -244,47 +196,37 @@ program
     const currentName = getGitUserName();
     const currentEmail = getGitUserEmail();
 
-    logger.header('👤 Git Author Setup');
+    logger.header('Git Author Setup');
     logger.blank();
 
     if (currentName.exists && currentName.value) {
       if (isAIAuthor(currentName.value)) {
-        logger.warning(`Current author: ${chalk.yellow(currentName.value)} ${chalk.dim('(AI detected)')}`);
+        logger.warning(
+          `Current author: ${logger.yellowText(currentName.value)} ${logger.dim('(AI detected)')}`,
+        );
       } else {
-        logger.info(`Current author: ${chalk.cyan(currentName.value)}`);
+        logger.info(`Current author: ${logger.cyan(currentName.value)}`);
       }
       if (currentEmail.exists && currentEmail.value) {
-        logger.info(`Current email:  ${chalk.cyan(currentEmail.value)}`);
+        logger.info(`Current email:  ${logger.cyan(currentEmail.value)}`);
       }
       logger.blank();
     }
 
-    const response = await prompts([
-      {
-        type: 'text',
-        name: 'name',
-        message: 'Your name',
-        initial: currentName.exists && currentName.value && !isAIAuthor(currentName.value) ? currentName.value : '',
-        validate: (value: string) => value.trim().length > 0 ? true : 'Name is required',
-      },
-      {
-        type: 'text',
-        name: 'email',
-        message: 'Your email',
-        initial: currentEmail.exists && currentEmail.value ? currentEmail.value : '',
-        validate: (value: string) => {
-          if (value.trim().length === 0) return 'Email is required';
-          if (!value.includes('@')) return 'Please enter a valid email';
-          return true;
-        },
-      },
-    ]);
+    const nameInit =
+      currentName.exists && currentName.value && !isAIAuthor(currentName.value)
+        ? currentName.value
+        : '';
+    const emailInit = currentEmail.exists && currentEmail.value ? currentEmail.value : '';
 
-    if (response.name && response.email) {
-      setGitUserName(response.name.trim());
-      setGitUserEmail(response.email.trim());
+    const name = await promptText('Your name', nameInit);
+    const email = await promptText('Your email', emailInit);
+
+    if (name && email) {
+      setGitUserName(name);
+      setGitUserEmail(email);
       logger.blank();
-      logger.success(`✓ Git author updated to: ${chalk.cyan(response.name)} <${chalk.cyan(response.email)}>`);
+      logger.success(`Git author updated to: ${logger.cyan(name)} <${logger.cyan(email)}>`);
       logger.blank();
     } else {
       logger.blank();
@@ -294,7 +236,7 @@ program
 
 // Parse arguments
 if (process.argv.length <= 2) {
-  await runInstallCommand();
+  await runInstallCommand({});
 } else {
   program.parse();
 }
