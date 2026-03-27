@@ -3,15 +3,17 @@
   "version": "1.0.5",
   "description": "Keep your code yours — remove AI co-author signatures from git commits",
   "type": "module",
-  "main": "./dist/install.js",
   "bin": {
     "noco": "./dist/cli.js"
   },
   "scripts": {
-    "build": "bun build ./src/cli.ts ./src/install.ts ./src/uninstall.ts ./src/types.ts ./src/utils/logger.ts ./src/utils/paths.ts ./src/utils/hook.ts ./src/utils/git.ts --outdir ./dist --target bun && bun build ./src/cli.ts ./src/install.ts ./src/uninstall.ts ./src/types.ts ./src/utils/logger.ts ./src/utils/paths.ts ./src/utils/hook.ts ./src/utils/git.ts --outdir ./dist --target node && node -e \"const fs=require('fs'); const p='./dist/cli.js'; fs.writeFileSync(p, '#!/usr/bin/env node\\n' + fs.readFileSync(p, 'utf8'));\"",
+    "build": "bun build ./src/cli.ts --outdir ./dist --target node && node -e \"const fs=require('fs'); const p='./dist/cli.js'; const c=fs.readFileSync(p,'utf8'); fs.writeFileSync(p,'#!/usr/bin/env node\\n'+c)\"",
     "dev": "bun run src/cli.ts",
     "test": "bun test",
-    "test:e2e": "node ./scripts/e2e-install.mjs"
+    "test:e2e": "node ./scripts/e2e-install.mjs",
+    "lint": "eslint src/",
+    "format": "prettier --write src/",
+    "format:check": "prettier --check src/"
   },
   "keywords": [
     "git",
@@ -30,23 +32,21 @@
     "url": "https://github.com/doanbactam/noco"
   },
   "dependencies": {
-    "chalk": "^5.3.0",
-    "commander": "^12.0.0",
-    "listr2": "^8.0.0",
-    "ora": "^8.0.1",
-    "prompts": "^2.4.2"
+    "commander": "^12.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.0.0",
     "@types/node": "^20.11.0",
-    "@types/prompts": "^2.4.9",
     "bun-types": "^1.0.0",
-    "typescript": "^5.3.0"
+    "eslint": "^9.0.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.3.0",
+    "typescript-eslint": "^8.0.0"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "files": [
-    "dist",
-    "hooks"
+    "dist"
   ]
 }
