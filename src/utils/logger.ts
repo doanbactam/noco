@@ -1,52 +1,51 @@
 /**
- * Beautiful CLI logger with chalk colors
+ * Minimal CLI logger using ANSI escape codes
  */
 
-import chalk from 'chalk';
-import ora, { Ora } from 'ora';
-
-export type LogLevel = 'info' | 'success' | 'warning' | 'error' | 'debug';
+const c = {
+  cyan: '\x1b[36m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+  blue: '\x1b[34m',
+  bold: '\x1b[1m',
+  dim: '\x1b[2m',
+  gray: '\x1b[90m',
+  reset: '\x1b[0m',
+} as const;
 
 export class Logger {
-  private spinner: Ora | null = null;
   private silent: boolean;
 
-  constructor(silent: boolean = false) {
+  constructor(silent = false) {
     this.silent = silent;
   }
 
-  info(message: string): void {
+  info(msg: string): void {
     if (this.silent) return;
-    console.log(chalk.blue('ℹ'), message);
+    console.log(`${c.blue}\u2139${c.reset} ${msg}`);
   }
 
-  success(message: string): void {
+  success(msg: string): void {
     if (this.silent) return;
-    console.log(chalk.green('✓'), message);
+    console.log(`${c.green}\u2713${c.reset} ${msg}`);
   }
 
-  warning(message: string): void {
+  warning(msg: string): void {
     if (this.silent) return;
-    console.log(chalk.yellow('⚠'), message);
+    console.log(`${c.yellow}\u26A0${c.reset} ${msg}`);
   }
 
-  error(message: string): void {
+  error(msg: string): void {
     if (this.silent) return;
-    console.log(chalk.red('✗'), message);
+    console.log(`${c.red}\u2717${c.reset} ${msg}`);
   }
 
-  debug(message: string): void {
-    if (this.silent) return;
-    if (process.env.DEBUG) {
-      console.log(chalk.gray('›'), chalk.gray(message));
-    }
-  }
-
-  header(message: string): void {
+  header(msg: string): void {
     if (this.silent) return;
     console.log('');
-    console.log(chalk.bold.cyan(message));
-    console.log(chalk.cyan('─'.repeat(message.length)));
+    console.log(`${c.bold}${c.cyan}${msg}${c.reset}`);
+    console.log(`${c.cyan}${'─'.repeat(msg.length)}${c.reset}`);
   }
 
   blank(): void {
@@ -54,74 +53,21 @@ export class Logger {
     console.log('');
   }
 
-  // Spinner methods
-  start(text: string): Ora {
-    if (this.silent) {
-      this.spinner = ora({ silent: true, text }).start();
-    } else {
-      this.spinner = ora({ text, color: 'cyan' }).start();
-    }
-    return this.spinner;
+  cyan(msg: string): string {
+    return `${c.cyan}${msg}${c.reset}`;
   }
 
-  succeed(text?: string): void {
-    this.spinner?.succeed(text);
-    this.spinner = null;
+  dim(msg: string): string {
+    return `${c.dim}${msg}${c.reset}`;
   }
 
-  fail(text?: string): void {
-    this.spinner?.fail(text);
-    this.spinner = null;
+  bold(msg: string): string {
+    return `${c.bold}${msg}${c.reset}`;
   }
 
-  stop(): void {
-    this.spinner?.stop();
-    this.spinner = null;
-  }
-
-  // Box for important messages
-  box(title: string, content: string): void {
-    if (this.silent) return;
-    const lines = content.split('\n');
-    const maxLength = Math.max(title.length, ...lines.map(l => l.length));
-
-    console.log('');
-    console.log(chalk.cyan('┌' + '─'.repeat(maxLength + 2) + '┐'));
-    console.log(chalk.cyan('│') + ' ' + chalk.bold(title) + ' '.repeat(maxLength - title.length + 1) + chalk.cyan('│'));
-    console.log(chalk.cyan('├' + '─'.repeat(maxLength + 2) + '┤'));
-
-    for (const line of lines) {
-      console.log(chalk.cyan('│') + ' ' + line + ' '.repeat(maxLength - line.length + 1) + chalk.cyan('│'));
-    }
-
-    console.log(chalk.cyan('└' + '─'.repeat(maxLength + 2) + '┘'));
-    console.log('');
-  }
-
-  // Table for structured data
-  table(headers: string[], rows: string[][]): void {
-    if (this.silent) return;
-
-    const colWidths = headers.map((h, i) =>
-      Math.max(h.length, ...rows.map(r => r[i]?.length || 0))
-    );
-
-    const printRow = (row: string[]) => {
-      console.log(
-        row.map((cell, i) => cell.padEnd(colWidths[i])).join('   ')
-      );
-    };
-
-    console.log('');
-    printRow(headers.map(h => chalk.bold(h)));
-    console.log(headers.map((_, i) => '─'.repeat(colWidths[i])).join('   '));
-
-    for (const row of rows) {
-      printRow(row);
-    }
-    console.log('');
+  yellowText(msg: string): string {
+    return `${c.yellow}${msg}${c.reset}`;
   }
 }
 
-// Default logger instance
 export const logger = new Logger();

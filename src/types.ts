@@ -1,5 +1,5 @@
 /**
- * TypeScript definitions for git-no-ai-author
+ * TypeScript definitions for nococli
  */
 
 export interface AI_PATTERN {
@@ -29,20 +29,24 @@ export interface HookResult {
   path?: string;
 }
 
-// All AI co-author patterns in one regex - easy to extend
-// Matches: Co-Authored-By: <AI-Name> <version> <email> ...
-// Uses character classes for case-insensitive matching (portable across sed implementations)
-// Handles whitespace variations: leading whitespace, optional space around colon, tabs/spaces after colon
-const AI_PATTERN_REGEX = '^\\s*[Cc][Oo]-[Aa][Uu][Tt][Hh][Oo][Rr][Ee][Dd]-[Bb][Yy]\\s*:\\s*(Claude|GitHub Copilot|ChatGPT|Anthropic|OpenAI|Cursor AI|AI Assistant|Tabnine|CodeWhisperer|Codeium|Replit Ghostwriter|Sourcegraph Cody|Cody|Factory Droid|factory-droid\\[bot\\]|Gemini|Google Gemini|Gemini Pro|Perplexity|Perplexity AI|Amazon Q|Amp|Amp AI).*';
+// AI co-author patterns — two layers of detection:
+// 1. Name-based: matches known AI names after "Co-Authored-By:"
+//    Uses character classes [Cc][Oo]... for portable case-insensitive matching across sed implementations
+// 2. Email-based: matches known AI email domains (more precise, fewer false positives)
+
+const AI_NAME_PATTERN =
+  '^\\s*[Cc][Oo]-[Aa][Uu][Tt][Hh][Oo][Rr][Ee][Dd]-[Bb][Yy]\\s*:\\s*(Claude|GitHub Copilot|ChatGPT|Anthropic|OpenAI|Cursor AI|AI Assistant|Tabnine|CodeWhisperer|Codeium|Replit Ghostwriter|Sourcegraph Cody|Cody|Factory Droid|factory-droid\\[bot\\]|Gemini|Google Gemini|Gemini Pro|Perplexity|Perplexity AI|Amazon Q|Amp|Amp AI).*';
+
+// Email domains used by AI tools — matches regardless of the name
+const AI_EMAIL_PATTERN =
+  '^\\s*[Cc][Oo]-[Aa][Uu][Tt][Hh][Oo][Rr][Ee][Dd]-[Bb][Yy]\\s*:\\s*.*\\b(?:noreply@anthropic\\.com|claude@anthropic\\.com|copilot@github\\.com|chatgpt@openai\\.com|noreply@openai\\.com|cursor@cursor\\.sh|tabnine@tabnine\\.com|codewhisperer@amazon\\.com|codeium@codeium\\.com|ghostwriter@replit\\.com|cody@sourcegraph\\.com|\\d+\\+factory-droid\\[bot\\]@users\\.noreply\\.github\\.com|gemini@google\\.com|perplexity@perplexity\\.ai|q@amazon\\.com|amp@amp\\.ai)\\b.*';
 
 export const DEFAULT_AI_PATTERNS: readonly AI_PATTERN[] = [
-  {
-    name: 'AI Co-Authors',
-    pattern: AI_PATTERN_REGEX,
-  },
+  { name: 'AI Co-Author Names', pattern: AI_NAME_PATTERN },
+  { name: 'AI Co-Author Emails', pattern: AI_EMAIL_PATTERN },
 ] as const;
 
-// AI author names to detect and replace (case-insensitive)
+// AI author names to detect in git config (case-insensitive)
 export const AI_AUTHOR_NAMES = [
   'claude',
   'claude code',
@@ -77,5 +81,5 @@ export const AI_AUTHOR_NAMES = [
 
 export function isAIAuthor(name: string): boolean {
   const lowerName = name.toLowerCase().trim();
-  return AI_AUTHOR_NAMES.some(aiName => lowerName.includes(aiName.toLowerCase()));
+  return AI_AUTHOR_NAMES.some((aiName) => lowerName.includes(aiName.toLowerCase()));
 }
