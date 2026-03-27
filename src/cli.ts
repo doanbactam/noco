@@ -11,7 +11,13 @@ import { Command } from 'commander';
 import { install } from './install.js';
 import { uninstall } from './uninstall.js';
 import { getPatternNames } from './utils/hook.js';
-import { getTemplateDir, getGitUserName, getGitUserEmail, setGitUserName, setGitUserEmail } from './utils/git.js';
+import {
+  getTemplateDir,
+  getGitUserName,
+  getGitUserEmail,
+  setGitUserName,
+  setGitUserEmail,
+} from './utils/git.js';
 import { getConfig } from './utils/paths.js';
 import { Logger } from './utils/logger.js';
 import { isAIAuthor } from './types.js';
