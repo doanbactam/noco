@@ -2,20 +2,20 @@ import { describe, test, expect } from 'bun:test';
 import { generateHookContent, getDefaultPatterns, getPatternNames } from './hook';
 
 /**
- * Unit tests for pattern matching in nococli hook
+ * Unit tests for nococli hook — Node.js cross-platform hook
  */
 
-describe('Pattern Matching - Hook Content Generation', () => {
-  test('generates valid bash hook content', () => {
+describe('Hook Content Generation', () => {
+  test('generates valid Node.js hook content', () => {
     const content = generateHookContent();
-    expect(content).toContain('#!/bin/bash');
-    expect(content).toContain('COMMIT_MSG_FILE=$1');
-    expect(content).toContain('sed -i -E');
+    expect(content).toContain('#!/usr/bin/env node');
+    expect(content).toContain('process.argv[2]');
+    expect(content).toContain("require('fs')");
   });
 
-  test('includes trailing empty lines cleanup', () => {
+  test('includes trailing blank line cleanup', () => {
     const content = generateHookContent();
-    expect(content).toContain('Remove trailing empty lines');
+    expect(content).toContain('filtered.pop()');
   });
 });
 
@@ -33,7 +33,7 @@ describe('Pattern Matching - Case Variations (VAL-PATTERN-001)', () => {
       'Co-authored-by: Claude <claude@anthropic.com>',
     ];
 
-    const regex = new RegExp(namePattern);
+    const regex = new RegExp(namePattern, 'i');
     testCases.forEach((input) => {
       expect(regex.test(input)).toBe(true);
     });
@@ -44,7 +44,7 @@ describe('Pattern Matching - AI Name Coverage (VAL-PATTERN-002)', () => {
   test('name pattern matches all required AI names', () => {
     const patterns = getDefaultPatterns();
     const namePattern = patterns[0].pattern;
-    const regex = new RegExp(namePattern);
+    const regex = new RegExp(namePattern, 'i');
 
     const aiSignatures = [
       'Co-Authored-By: Claude <claude@anthropic.com>',
@@ -74,7 +74,7 @@ describe('Pattern Matching - AI Name Coverage (VAL-PATTERN-002)', () => {
   test('email pattern matches all AI email domains', () => {
     const patterns = getDefaultPatterns();
     const emailPattern = patterns[1].pattern;
-    const regex = new RegExp(emailPattern);
+    const regex = new RegExp(emailPattern, 'i');
 
     const aiEmails = [
       'Co-Authored-By: Claude <noreply@anthropic.com>',
@@ -107,7 +107,7 @@ describe('Pattern Matching - Whitespace Variations (VAL-PATTERN-003)', () => {
   test('pattern handles various whitespace patterns', () => {
     const patterns = getDefaultPatterns();
     const pattern = patterns[0].pattern;
-    const regex = new RegExp(pattern);
+    const regex = new RegExp(pattern, 'i');
 
     const whitespaceVariations = [
       'Co-Authored-By: Claude <claude@anthropic.com>',
@@ -129,7 +129,7 @@ describe('Pattern Matching - Version Numbers (VAL-PATTERN-004)', () => {
   test('pattern handles AI signatures with version numbers', () => {
     const patterns = getDefaultPatterns();
     const pattern = patterns[0].pattern;
-    const regex = new RegExp(pattern);
+    const regex = new RegExp(pattern, 'i');
 
     const versionedSignatures = [
       'Co-Authored-By: Claude <claude@anthropic.com>',
@@ -147,7 +147,7 @@ describe('Pattern Matching - Version Numbers (VAL-PATTERN-004)', () => {
   test('documents unsupported version patterns - GPT-4', () => {
     const patterns = getDefaultPatterns();
     const pattern = patterns[0].pattern;
-    const regex = new RegExp(pattern);
+    const regex = new RegExp(pattern, 'i');
 
     const unsupported = ['Co-Authored-By: GPT-4 <gpt4@openai.com>'];
     unsupported.forEach((signature) => {
@@ -160,7 +160,7 @@ describe('Pattern Matching - Email Format Variations (VAL-PATTERN-005)', () => {
   test('email pattern handles various formats', () => {
     const patterns = getDefaultPatterns();
     const emailPattern = patterns[1].pattern;
-    const regex = new RegExp(emailPattern);
+    const regex = new RegExp(emailPattern, 'i');
 
     const emailVariations = [
       'Co-Authored-By: Claude <noreply@anthropic.com>',
@@ -177,7 +177,7 @@ describe('Pattern Matching - Email Format Variations (VAL-PATTERN-005)', () => {
 describe('Pattern Matching - Multiple Signatures (VAL-PATTERN-006)', () => {
   test('pattern matches each AI signature individually in multi-signature commit', () => {
     const patterns = getDefaultPatterns();
-    const regex = new RegExp(patterns[0].pattern);
+    const regex = new RegExp(patterns[0].pattern, 'i');
 
     const multiSignatureCommit = [
       'feat: add new feature',
@@ -197,8 +197,8 @@ describe('Pattern Matching - Multiple Signatures (VAL-PATTERN-006)', () => {
 describe('Pattern Matching - Mixed AI and Human Co-Authors (VAL-PATTERN-007)', () => {
   test('name pattern only matches AI co-authors, not human ones', () => {
     const patterns = getDefaultPatterns();
-    const nameRegex = new RegExp(patterns[0].pattern);
-    const emailRegex = new RegExp(patterns[1].pattern);
+    const nameRegex = new RegExp(patterns[0].pattern, 'i');
+    const emailRegex = new RegExp(patterns[1].pattern, 'i');
 
     const humanCoAuthors = [
       'Co-Authored-By: John Doe <john@example.com>',
@@ -225,8 +225,8 @@ describe('Pattern Matching - Mixed AI and Human Co-Authors (VAL-PATTERN-007)', (
 
   test('false positive reduction - human names with AI prefixes have non-AI emails', () => {
     const patterns = getDefaultPatterns();
-    const nameRegex = new RegExp(patterns[0].pattern);
-    const emailRegex = new RegExp(patterns[1].pattern);
+    const nameRegex = new RegExp(patterns[0].pattern, 'i');
+    const emailRegex = new RegExp(patterns[1].pattern, 'i');
 
     // These have AI-sounding names but human emails
     // Name pattern matches (greedy .*) — known false positive
@@ -247,7 +247,7 @@ describe('Pattern Matching - Mixed AI and Human Co-Authors (VAL-PATTERN-007)', (
 
   test('truly human names without AI prefixes are preserved', () => {
     const patterns = getDefaultPatterns();
-    const regex = new RegExp(patterns[0].pattern);
+    const regex = new RegExp(patterns[0].pattern, 'i');
 
     const preservedHumanCoAuthors = [
       'Co-Authored-By: John Doe <john@example.com>',
@@ -263,7 +263,7 @@ describe('Pattern Matching - Mixed AI and Human Co-Authors (VAL-PATTERN-007)', (
 describe('Pattern Matching - Signature Placement (VAL-PATTERN-008)', () => {
   test('pattern works with multi-line context extraction', () => {
     const patterns = getDefaultPatterns();
-    const regex = new RegExp(patterns[0].pattern);
+    const regex = new RegExp(patterns[0].pattern, 'i');
 
     const commitLines = [
       'feat: add feature',
@@ -287,7 +287,7 @@ describe('Pattern Matching - Signature Placement (VAL-PATTERN-008)', () => {
 describe('Pattern Matching - Special Characters (VAL-PATTERN-009)', () => {
   test('pattern handles special characters in AI names and emails', () => {
     const patterns = getDefaultPatterns();
-    const regex = new RegExp(patterns[0].pattern);
+    const regex = new RegExp(patterns[0].pattern, 'i');
 
     const supportedSignatures = [
       'Co-Authored-By: Claude-3.5-Sonnet <claude@anthropic.com>',
@@ -304,7 +304,7 @@ describe('Pattern Matching - Special Characters (VAL-PATTERN-009)', () => {
 describe('Pattern Matching - Edge Cases (VAL-PATTERN-010)', () => {
   test('pattern does not throw on malformed lines', () => {
     const patterns = getDefaultPatterns();
-    const regex = new RegExp(patterns[0].pattern);
+    const regex = new RegExp(patterns[0].pattern, 'i');
 
     const malformedLines = [
       'Co-Authored-By',
@@ -320,7 +320,7 @@ describe('Pattern Matching - Edge Cases (VAL-PATTERN-010)', () => {
 
   test('pattern does not match empty or whitespace-only content', () => {
     const patterns = getDefaultPatterns();
-    const regex = new RegExp(patterns[0].pattern);
+    const regex = new RegExp(patterns[0].pattern, 'i');
 
     expect(regex.test('')).toBe(false);
     expect(regex.test('   ')).toBe(false);
@@ -330,7 +330,7 @@ describe('Pattern Matching - Edge Cases (VAL-PATTERN-010)', () => {
 
   test('pattern does not match non-co-author content', () => {
     const patterns = getDefaultPatterns();
-    const regex = new RegExp(patterns[0].pattern);
+    const regex = new RegExp(patterns[0].pattern, 'i');
 
     const nonMatchingContent = [
       'This is a regular commit message',
@@ -342,6 +342,24 @@ describe('Pattern Matching - Edge Cases (VAL-PATTERN-010)', () => {
 
     nonMatchingContent.forEach((content) => {
       expect(regex.test(content)).toBe(false);
+    });
+  });
+
+  test('commit body with AI keywords is not corrupted', () => {
+    const patterns = getDefaultPatterns();
+    const regex = new RegExp(patterns[0].pattern, 'i');
+
+    const commitBodyLines = [
+      'docs: update Claude API documentation',
+      'This commit updates the documentation for:',
+      '- Claude API v3',
+      '- GitHub Copilot integration guide',
+      '- ChatGPT troubleshooting section',
+      'The AI assistant helped review this documentation.',
+    ];
+
+    commitBodyLines.forEach((line) => {
+      expect(regex.test(line)).toBe(false);
     });
   });
 });
@@ -365,7 +383,7 @@ describe('getDefaultPatterns', () => {
   test('pattern is valid regex', () => {
     const patterns = getDefaultPatterns();
     patterns.forEach((p) => {
-      expect(() => new RegExp(p.pattern)).not.toThrow();
+      expect(() => new RegExp(p.pattern, 'i')).not.toThrow();
     });
   });
 });
@@ -382,8 +400,16 @@ describe('generateHookContent', () => {
     expect(content).toContain('Claude');
   });
 
-  test('generates sed command with -E flag for extended regex', () => {
+  test('generates Node.js hook with require("fs")', () => {
     const content = generateHookContent();
-    expect(content).toContain('sed -i -E');
+    expect(content).toContain("require('fs')");
+    expect(content).toContain('#!/usr/bin/env node');
+    expect(content).toContain('process.argv[2]');
+  });
+
+  test('generates filter logic with patterns.some(p => p.test(line))', () => {
+    const content = generateHookContent();
+    expect(content).toContain('patterns.some');
+    expect(content).toContain('.test(line)');
   });
 });

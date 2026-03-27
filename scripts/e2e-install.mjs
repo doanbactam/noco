@@ -667,7 +667,8 @@ Fixes #123`;
     
     // Simulate rebase squash by using git rebase with automated commands
     // Use GIT_SEQUENCE_EDITOR to automate the rebase todo list (replace pick with squash)
-    const sequenceEditor = `sed -i '2,3s/^pick/squash/' "$1"`;
+    // Cross-platform: use Node.js instead of sed for Windows support
+    const sequenceEditor = `node -e "const fs=require('fs'),f=process.argv[1];let c=fs.readFileSync(f,'utf8');c=c.replace(/^pick/gm,(m,o)=>(c.substring(0,o).split('\\n').length<=3?'squash':m));fs.writeFileSync(f,c)"`;
     const rebaseEnv = {
       ...env,
       GIT_SEQUENCE_EDITOR: sequenceEditor,
@@ -717,8 +718,8 @@ Fixes #123`;
     assert.ok(!hasCRLF, 'Hook should use LF line endings, not CRLF');
     
     // Check hook content has expected elements
-    assert.ok(hookContent.includes('#!/bin/bash'), 'Hook should have bash shebang');
-    assert.ok(hookContent.includes('sed'), 'Hook should use sed');
+    assert.ok(hookContent.includes('#!/usr/bin/env node'), 'Hook should have Node.js shebang');
+    assert.ok(hookContent.includes("require('fs')"), 'Hook should use Node.js fs');
     
     console.log('✓ Platform-specific installation verified');
   }

@@ -31,15 +31,15 @@ export interface HookResult {
 
 // AI co-author patterns — two layers of detection:
 // 1. Name-based: matches known AI names after "Co-Authored-By:"
-//    Uses character classes [Cc][Oo]... for portable case-insensitive matching across sed implementations
 // 2. Email-based: matches known AI email domains (more precise, fewer false positives)
+// Both use JS RegExp with 'i' flag for case-insensitive matching (cross-platform, no sed needed)
 
 const AI_NAME_PATTERN =
-  '^\\s*[Cc][Oo]-[Aa][Uu][Tt][Hh][Oo][Rr][Ee][Dd]-[Bb][Yy]\\s*:\\s*(Claude|GitHub Copilot|ChatGPT|Anthropic|OpenAI|Cursor AI|AI Assistant|Tabnine|CodeWhisperer|Codeium|Replit Ghostwriter|Sourcegraph Cody|Cody|Factory Droid|factory-droid\\[bot\\]|Gemini|Google Gemini|Gemini Pro|Perplexity|Perplexity AI|Amazon Q|Amp|Amp AI).*';
+  '^\\s*Co-Authored-By\\s*:\\s*(Claude|GitHub Copilot|ChatGPT|Anthropic|OpenAI|Cursor AI|AI Assistant|Tabnine|CodeWhisperer|Codeium|Replit Ghostwriter|Sourcegraph Cody|Cody|Factory Droid|factory-droid\\[bot\\]|Gemini|Google Gemini|Gemini Pro|Perplexity|Perplexity AI|Amazon Q|Amp|Amp AI).*';
 
 // Email domains used by AI tools — matches regardless of the name
 const AI_EMAIL_PATTERN =
-  '^\\s*[Cc][Oo]-[Aa][Uu][Tt][Hh][Oo][Rr][Ee][Dd]-[Bb][Yy]\\s*:\\s*.*\\b(?:noreply@anthropic\\.com|claude@anthropic\\.com|copilot@github\\.com|chatgpt@openai\\.com|noreply@openai\\.com|cursor@cursor\\.sh|tabnine@tabnine\\.com|codewhisperer@amazon\\.com|codeium@codeium\\.com|ghostwriter@replit\\.com|cody@sourcegraph\\.com|\\d+\\+factory-droid\\[bot\\]@users\\.noreply\\.github\\.com|gemini@google\\.com|perplexity@perplexity\\.ai|q@amazon\\.com|amp@amp\\.ai)\\b.*';
+  '^\\s*Co-Authored-By\\s*:\\s*.*\\b(?:noreply@anthropic\\.com|claude@anthropic\\.com|copilot@github\\.com|chatgpt@openai\\.com|noreply@openai\\.com|cursor@cursor\\.sh|tabnine@tabnine\\.com|codewhisperer@amazon\\.com|codeium@codeium\\.com|ghostwriter@replit\\.com|cody@sourcegraph\\.com|\\d+\\+factory-droid\\[bot\\]@users\\.noreply\\.github\\.com|gemini@google\\.com|perplexity@perplexity\\.ai|q@amazon\\.com|amp@amp\\.ai)\\b.*';
 
 export const DEFAULT_AI_PATTERNS: readonly AI_PATTERN[] = [
   { name: 'AI Co-Author Names', pattern: AI_NAME_PATTERN },
