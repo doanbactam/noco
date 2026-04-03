@@ -4,7 +4,7 @@
 
 import fs from 'fs/promises';
 import { Logger } from './utils/logger.js';
-import { getConfig } from './utils/paths.js';
+import { getConfig, pathExists } from './utils/paths.js';
 import { unsetGitConfig } from './utils/git.js';
 import type { UninstallOptions } from './types.js';
 import type { HookMode } from './types.js';
@@ -37,6 +37,15 @@ export async function uninstall(options: UninstallOptions = {}): Promise<Uninsta
       logger.success(`Removed ${config.powerShellHookFile}`);
     } catch {
       logger.info('PowerShell hook file not found (already removed?)');
+    }
+
+    // Restore backups if they exist
+    for (const hookPath of [config.hookFile, config.powerShellHookFile]) {
+      const backupPath = `${hookPath}.bak`;
+      if (await pathExists(backupPath)) {
+        await fs.rename(backupPath, hookPath);
+        logger.success(`Restored previous hook from ${backupPath}`);
+      }
     }
 
     try {

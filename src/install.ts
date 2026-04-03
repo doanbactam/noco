@@ -4,8 +4,8 @@
 
 import fs from 'fs/promises';
 import { Logger } from './utils/logger.js';
-import { getConfig, toGitPath } from './utils/paths.js';
-import { createHookInstallPlan } from './utils/hook.js';
+import { getConfig, toGitPath, pathExists } from './utils/paths.js';
+import { createHookInstallPlan, isNococliHook } from './utils/hook.js';
 import { getTemplateDir, setTemplateDir } from './utils/git.js';
 import { detectPowerShellRuntime } from './utils/runtime.js';
 import type { InstallOptions } from './types.js';
@@ -43,6 +43,20 @@ export async function install(options: InstallOptions = {}): Promise<InstallResu
       platform,
       powerShellCommand: powerShellRuntime ?? undefined,
     });
+
+    // Backup existing hooks that are not from nococli
+    if (!options.force) {
+      for (const file of installPlan.files) {
+        if (await pathExists(file.path)) {
+          const existingContent = await fs.readFile(file.path, 'utf8');
+          if (!isNococliHook(existingContent)) {
+            const backupPath = `${file.path}.bak`;
+            await fs.copyFile(file.path, backupPath);
+            logger.warning(`Existing hook backed up to ${backupPath}`);
+          }
+        }
+      }
+    }
 
     for (const file of installPlan.files) {
       await fs.writeFile(file.path, file.content, {

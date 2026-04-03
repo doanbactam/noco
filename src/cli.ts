@@ -99,7 +99,7 @@ async function runInstallCommand(options: { force?: boolean; silent?: boolean })
   }
 
   // Install
-  const result = await install({ silent: options.silent });
+  const result = await install({ silent: options.silent, force: options.force });
 
   if (!result.success) {
     logger.blank();
