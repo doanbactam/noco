@@ -5,28 +5,51 @@
 import fs from 'fs/promises';
 import { Logger } from './utils/logger.js';
 import { getConfig, toGitPath } from './utils/paths.js';
-import { generateHookContent } from './utils/hook.js';
+import { createHookInstallPlan } from './utils/hook.js';
 import { getTemplateDir, setTemplateDir } from './utils/git.js';
+import { detectPowerShellRuntime } from './utils/runtime.js';
 import type { InstallOptions } from './types.js';
+import type { HookMode } from './types.js';
 
 export interface InstallResult {
   success: boolean;
   message: string;
   hookPath?: string;
   needsInit?: boolean;
+  hookMode?: HookMode;
+  runtime?: string;
 }
 
 export async function install(options: InstallOptions = {}): Promise<InstallResult> {
   const logger = new Logger(options.silent);
   const config = getConfig();
+  const platform = options.platform ?? process.platform;
 
   try {
     logger.info('Creating git templates directory...');
     await fs.mkdir(config.hooksDir, { recursive: true });
 
-    const hookContent = generateHookContent();
-    await fs.writeFile(config.hookFile, hookContent, { mode: 0o755 });
-    logger.success(`Hook created at ${config.hookFile}`);
+    const powerShellRuntime = detectPowerShellRuntime(platform);
+    if (platform === 'win32' && !powerShellRuntime) {
+      return {
+        success: false,
+        message:
+          'PowerShell runtime not found. Install PowerShell 7+ or ensure powershell.exe is available.',
+      };
+    }
+
+    const installPlan = createHookInstallPlan({
+      config,
+      platform,
+      powerShellCommand: powerShellRuntime ?? undefined,
+    });
+
+    for (const file of installPlan.files) {
+      await fs.writeFile(file.path, file.content, {
+        mode: file.mode,
+      });
+      logger.success(`Hook file created at ${file.path}`);
+    }
 
     logger.info('Configuring git templates...');
     const currentTemplate = getTemplateDir();
@@ -43,6 +66,8 @@ export async function install(options: InstallOptions = {}): Promise<InstallResu
         message: 'Hook installed but git config needs update',
         hookPath: config.hookFile,
         needsInit: true,
+        hookMode: installPlan.mode,
+        runtime: installPlan.runtime,
       };
     }
 
@@ -58,6 +83,8 @@ export async function install(options: InstallOptions = {}): Promise<InstallResu
       message: 'Successfully installed nococli',
       hookPath: config.hookFile,
       needsInit: false,
+      hookMode: installPlan.mode,
+      runtime: installPlan.runtime,
     };
   } catch (error) {
     logger.error('Installation failed');

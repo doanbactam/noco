@@ -22,6 +22,8 @@ That's it.
 
 nococli installs a Git `commit-msg` hook that automatically strips AI co-author signatures from your commit messages before they're saved. The hook is installed globally via `git init.templatedir`, so it applies to **all new repositories** automatically.
 
+On Windows, nococli installs a PowerShell-native hook runtime with a Git hook wrapper entrypoint so commits work from PowerShell 5.1 and PowerShell 7+.
+
 For existing repositories, just run `git init` to pick up the hook.
 
 ## CLI Commands
@@ -76,6 +78,7 @@ Removes co-author signatures from:
 
 - **Zero-config** — one command to install, works everywhere
 - **Lightweight** — single runtime dependency (commander), ~85KB bundle
+- **Windows PowerShell-native support** — works with PowerShell 5.1 and 7+ on Git for Windows
 - **AI author detection** — warns if your git author name looks AI-generated and helps you fix it
 - **Preserves human co-authors** — only strips AI signatures, keeps real collaborators
 - **Works with all git workflows** — rebase, amend, merge, interactive rebase
@@ -83,8 +86,8 @@ Removes co-author signatures from:
 ## Requirements
 
 - **Node.js** >= 18.0.0
-- **Unix/Linux/macOS**: Git with bash hook support
-- **Windows**: Git Bash, WSL, or MSYS2 (native PowerShell not supported)
+- **Unix/Linux/macOS**: Git with standard hook support
+- **Windows**: Git for Windows plus PowerShell 5.1 or PowerShell 7+
 
 ## Install
 

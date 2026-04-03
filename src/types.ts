@@ -2,25 +2,38 @@
  * TypeScript definitions for nococli
  */
 
+import patternCatalog from './pattern-catalog.json';
+
 export interface AI_PATTERN {
   name: string;
   pattern: string;
+}
+
+export interface AIProviderPatternCatalogEntry {
+  id: string;
+  signatureAliases: string[];
+  authorTokens: string[];
+  emails: string[];
+  emailPatterns?: string[];
 }
 
 export interface Config {
   templateDir: string;
   hooksDir: string;
   hookFile: string;
+  powerShellHookFile: string;
 }
 
 export interface InstallOptions {
   force?: boolean;
   silent?: boolean;
+  platform?: NodeJS.Platform;
 }
 
 export interface UninstallOptions {
   removeConfig?: boolean;
   silent?: boolean;
+  platform?: NodeJS.Platform;
 }
 
 export interface HookResult {
@@ -29,17 +42,49 @@ export interface HookResult {
   path?: string;
 }
 
-// AI co-author patterns — two layers of detection:
-// 1. Name-based: matches known AI names after "Co-Authored-By:"
-// 2. Email-based: matches known AI email domains (more precise, fewer false positives)
-// Both use JS RegExp with 'i' flag for case-insensitive matching (cross-platform, no sed needed)
+export type HookMode = 'node' | 'powershell';
 
-const AI_NAME_PATTERN =
-  '^\\s*Co-Authored-By\\s*:\\s*(Claude|GitHub Copilot|ChatGPT|Anthropic|OpenAI|Cursor AI|AI Assistant|Tabnine|CodeWhisperer|Codeium|Replit Ghostwriter|Sourcegraph Cody|Cody|Factory Droid|factory-droid\\[bot\\]|Gemini|Google Gemini|Gemini Pro|Perplexity|Perplexity AI|Amazon Q|Amp|Amp AI).*';
+const CO_AUTHORED_BY_PREFIX = '^\\s*Co-Authored-By\\s*:\\s*';
 
-// Email domains used by AI tools — matches regardless of the name
-const AI_EMAIL_PATTERN =
-  '^\\s*Co-Authored-By\\s*:\\s*.*\\b(?:noreply@anthropic\\.com|claude@anthropic\\.com|copilot@github\\.com|chatgpt@openai\\.com|noreply@openai\\.com|cursor@cursor\\.sh|tabnine@tabnine\\.com|codewhisperer@amazon\\.com|codeium@codeium\\.com|ghostwriter@replit\\.com|cody@sourcegraph\\.com|\\d+\\+factory-droid\\[bot\\]@users\\.noreply\\.github\\.com|gemini@google\\.com|perplexity@perplexity\\.ai|q@amazon\\.com|amp@amp\\.ai)\\b.*';
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function uniqueOrdered(values: readonly string[]): string[] {
+  return [...new Set(values)];
+}
+
+function flattenCatalogValues(
+  key: 'signatureAliases' | 'authorTokens' | 'emails' | 'emailPatterns',
+): string[] {
+  return uniqueOrdered(
+    AI_SIGNATURE_CATALOG.flatMap((provider) => provider[key] ?? []),
+  );
+}
+
+function buildNamePattern(aliases: readonly string[]): string {
+  return `${CO_AUTHORED_BY_PREFIX}(?:${aliases.map(escapeRegex).join('|')}).*`;
+}
+
+function buildEmailPattern(emails: readonly string[], emailPatterns: readonly string[]): string {
+  const emailAlternatives = [
+    ...emails.map(escapeRegex),
+    ...emailPatterns,
+  ];
+
+  return `${CO_AUTHORED_BY_PREFIX}.*\\b(?:${emailAlternatives.join('|')})\\b.*`;
+}
+
+export const AI_SIGNATURE_CATALOG: readonly AIProviderPatternCatalogEntry[] =
+  patternCatalog as readonly AIProviderPatternCatalogEntry[];
+
+const AI_SIGNATURE_ALIASES = flattenCatalogValues('signatureAliases');
+const AI_AUTHOR_TOKENS = flattenCatalogValues('authorTokens');
+const AI_EMAILS = flattenCatalogValues('emails');
+const AI_EMAIL_PATTERNS = flattenCatalogValues('emailPatterns');
+
+const AI_NAME_PATTERN = buildNamePattern(AI_SIGNATURE_ALIASES);
+const AI_EMAIL_PATTERN = buildEmailPattern(AI_EMAILS, AI_EMAIL_PATTERNS);
 
 export const DEFAULT_AI_PATTERNS: readonly AI_PATTERN[] = [
   { name: 'AI Co-Author Names', pattern: AI_NAME_PATTERN },
@@ -47,37 +92,7 @@ export const DEFAULT_AI_PATTERNS: readonly AI_PATTERN[] = [
 ] as const;
 
 // AI author names to detect in git config (case-insensitive)
-export const AI_AUTHOR_NAMES = [
-  'claude',
-  'claude code',
-  'claude opus',
-  'claude sonnet',
-  'claude haiku',
-  'anthropic',
-  'github copilot',
-  'copilot',
-  'chatgpt',
-  'openai',
-  'cursor ai',
-  'cursor',
-  'tabnine',
-  'codewhisperer',
-  'codeium',
-  'replit ghostwriter',
-  'sourcegraph cody',
-  'cody',
-  'factory droid',
-  'factory-droid',
-  'factory-droid[bot]',
-  'gemini',
-  'google gemini',
-  'perplexity',
-  'perplexity ai',
-  'amazon q',
-  'amp',
-  'amp ai',
-  'ai assistant',
-] as const;
+export const AI_AUTHOR_NAMES = AI_AUTHOR_TOKENS;
 
 export function isAIAuthor(name: string): boolean {
   const lowerName = name.toLowerCase().trim();

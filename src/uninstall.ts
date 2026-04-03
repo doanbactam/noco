@@ -7,17 +7,20 @@ import { Logger } from './utils/logger.js';
 import { getConfig } from './utils/paths.js';
 import { unsetGitConfig } from './utils/git.js';
 import type { UninstallOptions } from './types.js';
+import type { HookMode } from './types.js';
 
 export interface UninstallResult {
   success: boolean;
   message: string;
   removedConfig?: boolean;
+  hookMode?: HookMode;
 }
 
 export async function uninstall(options: UninstallOptions = {}): Promise<UninstallResult> {
   const logger = new Logger(options.silent);
   const config = getConfig();
   let removedConfig = false;
+  let removedPowerShellHook = false;
 
   try {
     logger.info('Removing hook file...');
@@ -26,6 +29,14 @@ export async function uninstall(options: UninstallOptions = {}): Promise<Uninsta
       logger.success(`Removed ${config.hookFile}`);
     } catch {
       logger.info('Hook file not found (already removed?)');
+    }
+
+    try {
+      await fs.unlink(config.powerShellHookFile);
+      removedPowerShellHook = true;
+      logger.success(`Removed ${config.powerShellHookFile}`);
+    } catch {
+      logger.info('PowerShell hook file not found (already removed?)');
     }
 
     try {
@@ -75,6 +86,7 @@ export async function uninstall(options: UninstallOptions = {}): Promise<Uninsta
       success: true,
       message: 'Successfully uninstalled nococli',
       removedConfig,
+      hookMode: removedPowerShellHook ? 'powershell' : 'node',
     };
   } catch (error) {
     logger.error('Uninstallation failed');
