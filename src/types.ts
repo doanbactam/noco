@@ -57,9 +57,7 @@ function uniqueOrdered(values: readonly string[]): string[] {
 function flattenCatalogValues(
   key: 'signatureAliases' | 'authorTokens' | 'emails' | 'emailPatterns',
 ): string[] {
-  return uniqueOrdered(
-    AI_SIGNATURE_CATALOG.flatMap((provider) => provider[key] ?? []),
-  );
+  return uniqueOrdered(AI_SIGNATURE_CATALOG.flatMap((provider) => provider[key] ?? []));
 }
 
 function buildNamePattern(aliases: readonly string[]): string {
@@ -67,10 +65,7 @@ function buildNamePattern(aliases: readonly string[]): string {
 }
 
 function buildEmailPattern(emails: readonly string[], emailPatterns: readonly string[]): string {
-  const emailAlternatives = [
-    ...emails.map(escapeRegex),
-    ...emailPatterns,
-  ];
+  const emailAlternatives = [...emails.map(escapeRegex), ...emailPatterns];
 
   return `${CO_AUTHORED_BY_PREFIX}.*\\b(?:${emailAlternatives.join('|')})\\b.*`;
 }

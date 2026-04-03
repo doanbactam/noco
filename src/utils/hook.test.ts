@@ -51,7 +51,9 @@ describe('Hook Content Generation', () => {
     expect(plan.files).toHaveLength(2);
     expect(plan.files[0].content).toContain('HOOK_RUNTIME=');
     expect(plan.files[0].content).toContain('C:/Program Files/PowerShell/7/pwsh.exe');
-    expect(plan.files[0].content).toContain('C:/Users/Test User/.git-templates/hooks/commit-msg.ps1');
+    expect(plan.files[0].content).toContain(
+      'C:/Users/Test User/.git-templates/hooks/commit-msg.ps1',
+    );
     expect(plan.files[1].content).toContain('Get-Content -LiteralPath');
   });
 

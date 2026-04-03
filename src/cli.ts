@@ -207,7 +207,9 @@ program
     } else if (hookExists) {
       logger.info(`Hook mode: ${logger.cyan('Node.js')}`);
       if (process.platform === 'win32') {
-        logger.warning('Legacy Windows hook detected. Re-run `npx nococli install` to install PowerShell support.');
+        logger.warning(
+          'Legacy Windows hook detected. Re-run `npx nococli install` to install PowerShell support.',
+        );
       }
     }
 

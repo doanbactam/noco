@@ -20,7 +20,9 @@ function resolveWindowsCommand(command: string): string | null {
   }
 }
 
-export function detectPowerShellRuntime(platform: NodeJS.Platform = process.platform): string | null {
+export function detectPowerShellRuntime(
+  platform: NodeJS.Platform = process.platform,
+): string | null {
   if (platform !== 'win32') {
     return null;
   }

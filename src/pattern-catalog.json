@@ -2,7 +2,14 @@
   {
     "id": "claude",
     "signatureAliases": ["Claude", "Anthropic"],
-    "authorTokens": ["claude", "claude code", "claude opus", "claude sonnet", "claude haiku", "anthropic"],
+    "authorTokens": [
+      "claude",
+      "claude code",
+      "claude opus",
+      "claude sonnet",
+      "claude haiku",
+      "anthropic"
+    ],
     "emails": ["noreply@anthropic.com", "claude@anthropic.com"]
   },
   {
