@@ -8,6 +8,14 @@ import fs from 'fs/promises';
 import { Config } from '../types.js';
 
 export function getHomeDir(): string {
+  if (process.env.HOME) {
+    return process.env.HOME;
+  }
+
+  if (process.env.USERPROFILE) {
+    return process.env.USERPROFILE;
+  }
+
   return os.homedir();
 }
 
@@ -16,11 +24,13 @@ export function getConfig(): Config {
   const templateDir = path.join(homeDir, '.git-templates');
   const hooksDir = path.join(templateDir, 'hooks');
   const hookFile = path.join(hooksDir, 'commit-msg');
+  const powerShellHookFile = path.join(hooksDir, 'commit-msg.ps1');
 
   return {
     templateDir,
     hooksDir,
     hookFile,
+    powerShellHookFile,
   };
 }
 

@@ -33,7 +33,7 @@ var __toESM = (mod, isNodeMode, target) => {
 var __commonJS = (cb, mod) => () => (mod || cb((mod = { exports: {} }).exports, mod), mod.exports);
 var __require = /* @__PURE__ */ createRequire(import.meta.url);
 
-// node_modules/commander/lib/error.js
+// ../../node_modules/commander/lib/error.js
 var require_error = __commonJS((exports) => {
   class CommanderError extends Error {
     constructor(exitCode, code, message) {
@@ -57,7 +57,7 @@ var require_error = __commonJS((exports) => {
   exports.InvalidArgumentError = InvalidArgumentError;
 });
 
-// node_modules/commander/lib/argument.js
+// ../../node_modules/commander/lib/argument.js
 var require_argument = __commonJS((exports) => {
   var { InvalidArgumentError } = require_error();
 
@@ -136,7 +136,7 @@ var require_argument = __commonJS((exports) => {
   exports.humanReadableArgName = humanReadableArgName;
 });
 
-// node_modules/commander/lib/help.js
+// ../../node_modules/commander/lib/help.js
 var require_help = __commonJS((exports) => {
   var { humanReadableArgName } = require_argument();
 
@@ -385,7 +385,7 @@ var require_help = __commonJS((exports) => {
   exports.Help = Help;
 });
 
-// node_modules/commander/lib/option.js
+// ../../node_modules/commander/lib/option.js
 var require_option = __commonJS((exports) => {
   var { InvalidArgumentError } = require_error();
 
@@ -536,7 +536,7 @@ var require_option = __commonJS((exports) => {
   exports.DualOptions = DualOptions;
 });
 
-// node_modules/commander/lib/suggestSimilar.js
+// ../../node_modules/commander/lib/suggestSimilar.js
 var require_suggestSimilar = __commonJS((exports) => {
   var maxDistance = 3;
   function editDistance(a, b) {
@@ -609,7 +609,7 @@ var require_suggestSimilar = __commonJS((exports) => {
   exports.suggestSimilar = suggestSimilar;
 });
 
-// node_modules/commander/lib/command.js
+// ../../node_modules/commander/lib/command.js
 var require_command = __commonJS((exports) => {
   var EventEmitter = __require("node:events").EventEmitter;
   var childProcess = __require("node:child_process");
@@ -1852,7 +1852,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
   exports.Command = Command;
 });
 
-// node_modules/commander/index.js
+// ../../node_modules/commander/index.js
 var require_commander = __commonJS((exports) => {
   var { Argument } = require_argument();
   var { Command } = require_command();
@@ -1878,7 +1878,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import { createInterface } from "readline/promises";
 
-// node_modules/commander/esm.mjs
+// ../../node_modules/commander/esm.mjs
 var import__ = __toESM(require_commander(), 1);
 var {
   program,
@@ -1966,6 +1966,12 @@ var logger = new Logger;
 import path from "path";
 import os from "os";
 function getHomeDir() {
+  if (process.env.HOME) {
+    return process.env.HOME;
+  }
+  if (process.env.USERPROFILE) {
+    return process.env.USERPROFILE;
+  }
   return os.homedir();
 }
 function getConfig() {
@@ -1973,67 +1979,165 @@ function getConfig() {
   const templateDir = path.join(homeDir, ".git-templates");
   const hooksDir = path.join(templateDir, "hooks");
   const hookFile = path.join(hooksDir, "commit-msg");
+  const powerShellHookFile = path.join(hooksDir, "commit-msg.ps1");
   return {
     templateDir,
     hooksDir,
-    hookFile
+    hookFile,
+    powerShellHookFile
   };
 }
 function toGitPath(filePath) {
   return filePath.replace(/\\/g, "/");
 }
 
+// src/pattern-catalog.json
+var pattern_catalog_default = [
+  {
+    id: "claude",
+    signatureAliases: ["Claude", "Anthropic"],
+    authorTokens: ["claude", "claude code", "claude opus", "claude sonnet", "claude haiku", "anthropic"],
+    emails: ["noreply@anthropic.com", "claude@anthropic.com"]
+  },
+  {
+    id: "copilot",
+    signatureAliases: ["GitHub Copilot"],
+    authorTokens: ["github copilot", "copilot"],
+    emails: ["copilot@github.com"]
+  },
+  {
+    id: "chatgpt",
+    signatureAliases: ["ChatGPT", "OpenAI"],
+    authorTokens: ["chatgpt", "openai"],
+    emails: ["chatgpt@openai.com", "noreply@openai.com"]
+  },
+  {
+    id: "cursor",
+    signatureAliases: ["Cursor AI"],
+    authorTokens: ["cursor ai", "cursor"],
+    emails: ["cursor@cursor.sh"]
+  },
+  {
+    id: "ai-assistant",
+    signatureAliases: ["AI Assistant"],
+    authorTokens: ["ai assistant"],
+    emails: []
+  },
+  {
+    id: "tabnine",
+    signatureAliases: ["Tabnine"],
+    authorTokens: ["tabnine"],
+    emails: ["tabnine@tabnine.com"]
+  },
+  {
+    id: "codewhisperer",
+    signatureAliases: ["CodeWhisperer"],
+    authorTokens: ["codewhisperer"],
+    emails: ["codewhisperer@amazon.com"]
+  },
+  {
+    id: "codeium",
+    signatureAliases: ["Codeium"],
+    authorTokens: ["codeium"],
+    emails: ["codeium@codeium.com"]
+  },
+  {
+    id: "replit-ghostwriter",
+    signatureAliases: ["Replit Ghostwriter"],
+    authorTokens: ["replit ghostwriter"],
+    emails: ["ghostwriter@replit.com"]
+  },
+  {
+    id: "sourcegraph-cody",
+    signatureAliases: ["Sourcegraph Cody", "Cody"],
+    authorTokens: ["sourcegraph cody", "cody"],
+    emails: ["cody@sourcegraph.com"]
+  },
+  {
+    id: "factory-droid",
+    signatureAliases: ["Factory Droid", "factory-droid[bot]"],
+    authorTokens: ["factory droid", "factory-droid", "factory-droid[bot]"],
+    emails: [],
+    emailPatterns: ["\\d+\\+factory-droid\\[bot\\]@users\\.noreply\\.github\\.com"]
+  },
+  {
+    id: "gemini",
+    signatureAliases: ["Gemini", "Google Gemini", "Gemini Pro"],
+    authorTokens: ["gemini", "google gemini"],
+    emails: ["gemini@google.com"]
+  },
+  {
+    id: "perplexity",
+    signatureAliases: ["Perplexity", "Perplexity AI"],
+    authorTokens: ["perplexity", "perplexity ai"],
+    emails: ["perplexity@perplexity.ai"]
+  },
+  {
+    id: "amazon-q",
+    signatureAliases: ["Amazon Q"],
+    authorTokens: ["amazon q"],
+    emails: ["q@amazon.com"]
+  },
+  {
+    id: "amp",
+    signatureAliases: ["Amp", "Amp AI"],
+    authorTokens: ["amp", "amp ai"],
+    emails: ["amp@amp.ai"]
+  }
+];
+
 // src/types.ts
-var AI_NAME_PATTERN = "^\\s*Co-Authored-By\\s*:\\s*(Claude|GitHub Copilot|ChatGPT|Anthropic|OpenAI|Cursor AI|AI Assistant|Tabnine|CodeWhisperer|Codeium|Replit Ghostwriter|Sourcegraph Cody|Cody|Factory Droid|factory-droid\\[bot\\]|Gemini|Google Gemini|Gemini Pro|Perplexity|Perplexity AI|Amazon Q|Amp|Amp AI).*";
-var AI_EMAIL_PATTERN = "^\\s*Co-Authored-By\\s*:\\s*.*\\b(?:noreply@anthropic\\.com|claude@anthropic\\.com|copilot@github\\.com|chatgpt@openai\\.com|noreply@openai\\.com|cursor@cursor\\.sh|tabnine@tabnine\\.com|codewhisperer@amazon\\.com|codeium@codeium\\.com|ghostwriter@replit\\.com|cody@sourcegraph\\.com|\\d+\\+factory-droid\\[bot\\]@users\\.noreply\\.github\\.com|gemini@google\\.com|perplexity@perplexity\\.ai|q@amazon\\.com|amp@amp\\.ai)\\b.*";
+var CO_AUTHORED_BY_PREFIX = "^\\s*Co-Authored-By\\s*:\\s*";
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function uniqueOrdered(values) {
+  return [...new Set(values)];
+}
+function flattenCatalogValues(key) {
+  return uniqueOrdered(AI_SIGNATURE_CATALOG.flatMap((provider) => provider[key] ?? []));
+}
+function buildNamePattern(aliases) {
+  return `${CO_AUTHORED_BY_PREFIX}(?:${aliases.map(escapeRegex).join("|")}).*`;
+}
+function buildEmailPattern(emails, emailPatterns) {
+  const emailAlternatives = [
+    ...emails.map(escapeRegex),
+    ...emailPatterns
+  ];
+  return `${CO_AUTHORED_BY_PREFIX}.*\\b(?:${emailAlternatives.join("|")})\\b.*`;
+}
+var AI_SIGNATURE_CATALOG = pattern_catalog_default;
+var AI_SIGNATURE_ALIASES = flattenCatalogValues("signatureAliases");
+var AI_AUTHOR_TOKENS = flattenCatalogValues("authorTokens");
+var AI_EMAILS = flattenCatalogValues("emails");
+var AI_EMAIL_PATTERNS = flattenCatalogValues("emailPatterns");
+var AI_NAME_PATTERN = buildNamePattern(AI_SIGNATURE_ALIASES);
+var AI_EMAIL_PATTERN = buildEmailPattern(AI_EMAILS, AI_EMAIL_PATTERNS);
 var DEFAULT_AI_PATTERNS = [
   { name: "AI Co-Author Names", pattern: AI_NAME_PATTERN },
   { name: "AI Co-Author Emails", pattern: AI_EMAIL_PATTERN }
 ];
-var AI_AUTHOR_NAMES = [
-  "claude",
-  "claude code",
-  "claude opus",
-  "claude sonnet",
-  "claude haiku",
-  "anthropic",
-  "github copilot",
-  "copilot",
-  "chatgpt",
-  "openai",
-  "cursor ai",
-  "cursor",
-  "tabnine",
-  "codewhisperer",
-  "codeium",
-  "replit ghostwriter",
-  "sourcegraph cody",
-  "cody",
-  "factory droid",
-  "factory-droid",
-  "factory-droid[bot]",
-  "gemini",
-  "google gemini",
-  "perplexity",
-  "perplexity ai",
-  "amazon q",
-  "amp",
-  "amp ai",
-  "ai assistant"
-];
+var AI_AUTHOR_NAMES = AI_AUTHOR_TOKENS;
 function isAIAuthor(name) {
   const lowerName = name.toLowerCase().trim();
   return AI_AUTHOR_NAMES.some((aiName) => lowerName.includes(aiName.toLowerCase()));
 }
 
 // src/utils/hook.ts
-function generateHookContent(options = {}) {
-  const patterns = options.patterns || DEFAULT_AI_PATTERNS;
-  const patternLiterals = patterns.map((p) => {
-    const flags = "i";
-    return `new RegExp(${JSON.stringify(p.pattern)}, '${flags}')`;
-  }).join(`,
+function getPatternLiterals(patterns) {
+  return patterns.map((pattern) => `new RegExp(${JSON.stringify(pattern.pattern)}, 'i')`).join(`,
     `);
+}
+function escapePowerShellSingleQuotedString(value) {
+  return value.replace(/'/g, "''");
+}
+function quotePosixShell(value) {
+  return `'${value.replace(/'/g, `'"'"'`)}'`;
+}
+function generateNodeHookContent(options = {}) {
+  const patterns = options.patterns || DEFAULT_AI_PATTERNS;
+  const patternLiterals = getPatternLiterals(patterns);
   return `#!/usr/bin/env node
 // nococli: Remove AI co-author signatures from commit messages
 // Generated by noco (https://github.com/doanbactam/noco)
@@ -2053,19 +2157,131 @@ try {
   process.exit(0);
 }
 
-const lines = content.split('\\n');
+const lines = content.split(/\\r?\\n/);
 const filtered = lines.filter(line => !patterns.some(p => p.test(line)));
 
-// Strip trailing blank lines
 while (filtered.length > 0 && /^\\s*$/.test(filtered[filtered.length - 1])) {
   filtered.pop();
 }
 
-fs.writeFileSync(file, filtered.join('\\n'));
+try {
+  fs.writeFileSync(file, filtered.join('\\n'));
+} catch {
+  process.exit(0);
+}
 `;
 }
+function generatePowerShellHookContent(options = {}) {
+  const patterns = options.patterns || DEFAULT_AI_PATTERNS;
+  const serializedPatterns = patterns.map((pattern) => `  '${escapePowerShellSingleQuotedString(pattern.pattern)}'`).join(`
+`);
+  return `# nococli: Remove AI co-author signatures from commit messages
+# Generated by noco (https://github.com/doanbactam/noco)
+
+param(
+  [string]$CommitMessagePath
+)
+
+if (-not $CommitMessagePath) {
+  exit 0
+}
+
+$patterns = @(
+${serializedPatterns}
+)
+
+try {
+  $content = Get-Content -LiteralPath $CommitMessagePath -Raw -ErrorAction Stop
+} catch {
+  exit 0
+}
+
+$lines = $content -split "\\r?\\n"
+$filtered = New-Object System.Collections.Generic.List[string]
+
+foreach ($line in $lines) {
+  $isAiLine = $false
+
+  foreach ($pattern in $patterns) {
+    if ($line -match $pattern) {
+      $isAiLine = $true
+      break
+    }
+  }
+
+  if (-not $isAiLine) {
+    [void]$filtered.Add($line)
+  }
+}
+
+while ($filtered.Count -gt 0 -and [string]::IsNullOrWhiteSpace($filtered[$filtered.Count - 1])) {
+  $filtered.RemoveAt($filtered.Count - 1)
+}
+
+try {
+  $encoding = New-Object System.Text.UTF8Encoding($false)
+  [System.IO.File]::WriteAllText($CommitMessagePath, [string]::Join("\`n", $filtered), $encoding)
+} catch {
+  exit 0
+}
+`;
+}
+function generateWindowsHookWrapperContent(config, powerShellCommand) {
+  const runtime = quotePosixShell(toGitPath(powerShellCommand));
+  const powerShellHookFile = quotePosixShell(toGitPath(config.powerShellHookFile));
+  return `#!/bin/sh
+# nococli: Windows hook wrapper
+# Generated by noco (https://github.com/doanbactam/noco)
+
+HOOK_RUNTIME=${runtime}
+HOOK_SCRIPT=${powerShellHookFile}
+
+if [ ! -f "$HOOK_SCRIPT" ]; then
+  exit 0
+fi
+
+"$HOOK_RUNTIME" -NoLogo -NoProfile -ExecutionPolicy Bypass -File "$HOOK_SCRIPT" "$1"
+exit $?
+`;
+}
+function createHookInstallPlan(options) {
+  const platform = options.platform ?? process.platform;
+  const patterns = options.patterns || DEFAULT_AI_PATTERNS;
+  if (platform === "win32") {
+    if (!options.powerShellCommand) {
+      throw new Error("PowerShell runtime is required for Windows hook installation");
+    }
+    return {
+      mode: "powershell",
+      runtime: options.powerShellCommand,
+      files: [
+        {
+          path: options.config.hookFile,
+          content: generateWindowsHookWrapperContent(options.config, options.powerShellCommand),
+          mode: 493
+        },
+        {
+          path: options.config.powerShellHookFile,
+          content: generatePowerShellHookContent({ patterns }),
+          mode: 420
+        }
+      ]
+    };
+  }
+  return {
+    mode: "node",
+    runtime: "node",
+    files: [
+      {
+        path: options.config.hookFile,
+        content: generateNodeHookContent({ patterns }),
+        mode: 493
+      }
+    ]
+  };
+}
 function getPatternNames() {
-  return DEFAULT_AI_PATTERNS.map((p) => p.name);
+  return DEFAULT_AI_PATTERNS.map((pattern) => pattern.name);
 }
 
 // src/utils/git.ts
@@ -2137,16 +2353,52 @@ function setGitUserEmail(email) {
   setGitConfig("user.email", email);
 }
 
+// src/utils/runtime.ts
+import { execFileSync as execFileSync2 } from "child_process";
+function resolveWindowsCommand(command) {
+  try {
+    const output = execFileSync2("where.exe", [command], {
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "ignore"]
+    }).split(/\r?\n/).map((line) => line.trim()).find(Boolean);
+    return output || null;
+  } catch {
+    return null;
+  }
+}
+function detectPowerShellRuntime(platform = process.platform) {
+  if (platform !== "win32") {
+    return null;
+  }
+  return resolveWindowsCommand("pwsh") ?? resolveWindowsCommand("powershell.exe");
+}
+
 // src/install.ts
 async function install(options = {}) {
   const logger2 = new Logger(options.silent);
   const config = getConfig();
+  const platform = options.platform ?? process.platform;
   try {
     logger2.info("Creating git templates directory...");
     await fs.mkdir(config.hooksDir, { recursive: true });
-    const hookContent = generateHookContent();
-    await fs.writeFile(config.hookFile, hookContent, { mode: 493 });
-    logger2.success(`Hook created at ${config.hookFile}`);
+    const powerShellRuntime = detectPowerShellRuntime(platform);
+    if (platform === "win32" && !powerShellRuntime) {
+      return {
+        success: false,
+        message: "PowerShell runtime not found. Install PowerShell 7+ or ensure powershell.exe is available."
+      };
+    }
+    const installPlan = createHookInstallPlan({
+      config,
+      platform,
+      powerShellCommand: powerShellRuntime ?? undefined
+    });
+    for (const file of installPlan.files) {
+      await fs.writeFile(file.path, file.content, {
+        mode: file.mode
+      });
+      logger2.success(`Hook file created at ${file.path}`);
+    }
     logger2.info("Configuring git templates...");
     const currentTemplate = getTemplateDir();
     const templateDirForGit = toGitPath(config.templateDir);
@@ -2160,7 +2412,9 @@ async function install(options = {}) {
         success: true,
         message: "Hook installed but git config needs update",
         hookPath: config.hookFile,
-        needsInit: true
+        needsInit: true,
+        hookMode: installPlan.mode,
+        runtime: installPlan.runtime
       };
     }
     if (!currentTemplate.exists) {
@@ -2173,7 +2427,9 @@ async function install(options = {}) {
       success: true,
       message: "Successfully installed nococli",
       hookPath: config.hookFile,
-      needsInit: false
+      needsInit: false,
+      hookMode: installPlan.mode,
+      runtime: installPlan.runtime
     };
   } catch (error) {
     logger2.error("Installation failed");
@@ -2193,6 +2449,7 @@ async function uninstall(options = {}) {
   const logger2 = new Logger(options.silent);
   const config = getConfig();
   let removedConfig = false;
+  let removedPowerShellHook = false;
   try {
     logger2.info("Removing hook file...");
     try {
@@ -2200,6 +2457,13 @@ async function uninstall(options = {}) {
       logger2.success(`Removed ${config.hookFile}`);
     } catch {
       logger2.info("Hook file not found (already removed?)");
+    }
+    try {
+      await fs2.unlink(config.powerShellHookFile);
+      removedPowerShellHook = true;
+      logger2.success(`Removed ${config.powerShellHookFile}`);
+    } catch {
+      logger2.info("PowerShell hook file not found (already removed?)");
     }
     try {
       const hooksExists = await fs2.access(config.hooksDir).then(() => true).catch(() => false);
@@ -2235,7 +2499,8 @@ async function uninstall(options = {}) {
     return {
       success: true,
       message: "Successfully uninstalled nococli",
-      removedConfig
+      removedConfig,
+      hookMode: removedPowerShellHook ? "powershell" : "node"
     };
   } catch (error) {
     logger2.error("Uninstallation failed");
@@ -2270,6 +2535,14 @@ async function promptConfirm(message) {
   const answer = await rl.question(`${message} (y/N): `);
   rl.close();
   return answer.toLowerCase() === "y" || answer.toLowerCase() === "yes";
+}
+async function fileExists(filePath) {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
 }
 async function runInstallCommand(options) {
   const currentName = getGitUserName();
@@ -2315,6 +2588,14 @@ async function runInstallCommand(options) {
     logger2.success("Installation complete!");
   }
   logger2.blank();
+  if (result.hookMode === "powershell") {
+    logger2.info(`Hook mode: ${logger2.cyan("PowerShell native")}`);
+    logger2.info(`PowerShell runtime: ${logger2.cyan(result.runtime || "unavailable")}`);
+    logger2.blank();
+  } else {
+    logger2.info(`Hook mode: ${logger2.cyan("Node.js")}`);
+    logger2.blank();
+  }
   logger2.info("AI signatures that will be removed:");
   getPatternNames().forEach((p) => logger2.info(`  ${logger2.dim("•")} ${p}`));
   logger2.blank();
@@ -2342,18 +2623,34 @@ program2.command("uninstall").description("Remove noco hook from your system").o
 });
 program2.command("status").description("Check if noco is properly installed and configured").action(async () => {
   logger2.header("noco Status");
+  const config = getConfig();
   const current = getTemplateDir();
   if (current.exists && current.value) {
     logger2.success(`Installed at ${current.value}`);
   } else {
     logger2.warning("Not installed");
   }
-  const config = getConfig();
-  try {
-    await access(config.hookFile);
-    logger2.success("Hook file exists");
-  } catch {
+  const hookExists = await fileExists(config.hookFile);
+  const powerShellHookExists = await fileExists(config.powerShellHookFile);
+  if (hookExists) {
+    logger2.success("Hook entrypoint exists");
+  } else {
     logger2.warning("Hook file not found");
+  }
+  if (powerShellHookExists) {
+    logger2.success("PowerShell hook runtime exists");
+    const runtime = detectPowerShellRuntime();
+    if (runtime) {
+      logger2.info(`Hook mode: ${logger2.cyan("PowerShell native")}`);
+      logger2.info(`Runtime: ${logger2.cyan(runtime)}`);
+    } else {
+      logger2.warning("PowerShell hook installed, but no PowerShell runtime was detected");
+    }
+  } else if (hookExists) {
+    logger2.info(`Hook mode: ${logger2.cyan("Node.js")}`);
+    if (process.platform === "win32") {
+      logger2.warning("Legacy Windows hook detected. Re-run `npx nococli install` to install PowerShell support.");
+    }
   }
   logger2.blank();
   logger2.info(logger2.bold("Supported AI signatures:"));

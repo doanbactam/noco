@@ -1,21 +1,91 @@
 import { describe, test, expect } from 'bun:test';
-import { generateHookContent, getDefaultPatterns, getPatternNames } from './hook';
+import {
+  createHookInstallPlan,
+  generateNodeHookContent,
+  generatePowerShellHookContent,
+  getDefaultPatterns,
+  getPatternNames,
+  sanitizeCommitMessage,
+} from './hook';
+import { AI_AUTHOR_NAMES, AI_SIGNATURE_CATALOG } from '../types';
 
 /**
  * Unit tests for nococli hook — Node.js cross-platform hook
  */
 
+const windowsConfig = {
+  templateDir: 'C:\\Users\\Test User\\.git-templates',
+  hooksDir: 'C:\\Users\\Test User\\.git-templates\\hooks',
+  hookFile: 'C:\\Users\\Test User\\.git-templates\\hooks\\commit-msg',
+  powerShellHookFile: 'C:\\Users\\Test User\\.git-templates\\hooks\\commit-msg.ps1',
+};
+
 describe('Hook Content Generation', () => {
   test('generates valid Node.js hook content', () => {
-    const content = generateHookContent();
+    const content = generateNodeHookContent();
     expect(content).toContain('#!/usr/bin/env node');
     expect(content).toContain('process.argv[2]');
     expect(content).toContain("require('fs')");
   });
 
   test('includes trailing blank line cleanup', () => {
-    const content = generateHookContent();
+    const content = generateNodeHookContent();
     expect(content).toContain('filtered.pop()');
+  });
+
+  test('generates valid PowerShell hook content', () => {
+    const content = generatePowerShellHookContent();
+    expect(content).toContain('param(');
+    expect(content).toContain('Get-Content -LiteralPath');
+    expect(content).toContain('System.Text.UTF8Encoding($false)');
+  });
+
+  test('creates a Windows install plan with wrapper and PowerShell runtime', () => {
+    const plan = createHookInstallPlan({
+      config: windowsConfig,
+      platform: 'win32',
+      powerShellCommand: 'C:\\Program Files\\PowerShell\\7\\pwsh.exe',
+    });
+
+    expect(plan.mode).toBe('powershell');
+    expect(plan.files).toHaveLength(2);
+    expect(plan.files[0].content).toContain('HOOK_RUNTIME=');
+    expect(plan.files[0].content).toContain('C:/Program Files/PowerShell/7/pwsh.exe');
+    expect(plan.files[0].content).toContain('C:/Users/Test User/.git-templates/hooks/commit-msg.ps1');
+    expect(plan.files[1].content).toContain('Get-Content -LiteralPath');
+  });
+
+  test('creates a Node install plan on non-Windows', () => {
+    const plan = createHookInstallPlan({
+      config: windowsConfig,
+      platform: 'linux',
+    });
+
+    expect(plan.mode).toBe('node');
+    expect(plan.files).toHaveLength(1);
+    expect(plan.files[0].content).toContain('#!/usr/bin/env node');
+  });
+});
+
+describe('Commit Message Sanitization', () => {
+  test('removes AI co-authors and trailing blank lines', () => {
+    const sanitized = sanitizeCommitMessage(`feat: add feature
+
+Body line
+
+Co-Authored-By: Claude <claude@anthropic.com>
+
+`);
+
+    expect(sanitized).toBe('feat: add feature\n\nBody line');
+  });
+
+  test('preserves human co-authors', () => {
+    const sanitized = sanitizeCommitMessage(`feat: add feature
+
+Co-Authored-By: John Doe <john@example.com>`);
+
+    expect(sanitized).toContain('John Doe');
   });
 });
 
@@ -386,29 +456,61 @@ describe('getDefaultPatterns', () => {
       expect(() => new RegExp(p.pattern, 'i')).not.toThrow();
     });
   });
+
+  test('default patterns are derived from the shared catalog data', () => {
+    const [namePattern, emailPattern] = getDefaultPatterns();
+    const nameRegex = new RegExp(namePattern.pattern, 'i');
+    const emailRegex = new RegExp(emailPattern.pattern, 'i');
+
+    AI_SIGNATURE_CATALOG.forEach((provider) => {
+      provider.signatureAliases.forEach((alias) => {
+        expect(nameRegex.test(`Co-Authored-By: ${alias} <bot@example.com>`)).toBe(true);
+      });
+
+      provider.emails.forEach((email) => {
+        expect(emailRegex.test(`Co-Authored-By: Shared Source <${email}>`)).toBe(true);
+      });
+
+      provider.emailPatterns?.forEach((emailPatternValue) => {
+        const sample =
+          emailPatternValue === '\\d+\\+factory-droid\\[bot\\]@users\\.noreply\\.github\\.com'
+            ? '138933559+factory-droid[bot]@users.noreply.github.com'
+            : emailPatternValue;
+
+        expect(emailRegex.test(`Co-Authored-By: Shared Source <${sample}>`)).toBe(true);
+      });
+    });
+  });
 });
 
-describe('generateHookContent', () => {
+describe('AI author detection', () => {
+  test('author name tokens are derived from the shared catalog data', () => {
+    const catalogTokens = AI_SIGNATURE_CATALOG.flatMap((provider) => provider.authorTokens);
+    expect(AI_AUTHOR_NAMES).toEqual([...new Set(catalogTokens)]);
+  });
+});
+
+describe('generateNodeHookContent', () => {
   test('accepts custom patterns option', () => {
     const customPatterns = [{ name: 'Custom AI', pattern: 'Co-Authored-By: CustomAI.*' }];
-    const content = generateHookContent({ patterns: customPatterns });
+    const content = generateNodeHookContent({ patterns: customPatterns });
     expect(content).toContain('CustomAI');
   });
 
   test('uses default patterns when no options provided', () => {
-    const content = generateHookContent();
+    const content = generateNodeHookContent();
     expect(content).toContain('Claude');
   });
 
   test('generates Node.js hook with require("fs")', () => {
-    const content = generateHookContent();
+    const content = generateNodeHookContent();
     expect(content).toContain("require('fs')");
     expect(content).toContain('#!/usr/bin/env node');
     expect(content).toContain('process.argv[2]');
   });
 
   test('generates filter logic with patterns.some(p => p.test(line))', () => {
-    const content = generateHookContent();
+    const content = generateNodeHookContent();
     expect(content).toContain('patterns.some');
     expect(content).toContain('.test(line)');
   });

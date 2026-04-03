@@ -7,6 +7,31 @@ import { spawnSync } from 'node:child_process';
 const repoRoot = process.cwd();
 const cliPath = path.join(repoRoot, 'dist', 'cli.js');
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'nococli-e2e-'));
+const isWindows = process.platform === 'win32';
+const patternCatalogPath = path.join(repoRoot, 'src', 'pattern-catalog.json');
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function buildDefaultPatterns(catalog) {
+  const uniqueOrdered = (values) => [...new Set(values)];
+  const flatten = (key) => uniqueOrdered(catalog.flatMap((provider) => provider[key] ?? []));
+
+  const signatureAliases = flatten('signatureAliases');
+  const emails = flatten('emails');
+  const emailPatterns = flatten('emailPatterns');
+  const prefix = '^\\s*Co-Authored-By\\s*:\\s*';
+
+  return [
+    new RegExp(`${prefix}(?:${signatureAliases.map(escapeRegex).join('|')}).*`, 'i'),
+    new RegExp(`${prefix}.*\\b(?:${[...emails.map(escapeRegex), ...emailPatterns].join('|')})\\b.*`, 'i'),
+  ];
+}
+
+const aiSignatureRegexes = buildDefaultPatterns(
+  JSON.parse(fs.readFileSync(patternCatalogPath, 'utf8')),
+);
 
 function toGitPath(filePath) {
   return filePath.replace(/\\/g, '/');
@@ -60,6 +85,35 @@ function assertSuccess(result, label) {
   );
 }
 
+function getHookPaths(env) {
+  return {
+    hookPath: path.join(env.HOME, '.git-templates', 'hooks', 'commit-msg'),
+    powerShellHookPath: path.join(env.HOME, '.git-templates', 'hooks', 'commit-msg.ps1'),
+  };
+}
+
+function stripAnsi(value) {
+  return value.replace(/\x1B\[[0-9;]*m/g, '');
+}
+
+function assertHookArtifacts(env) {
+  const { hookPath, powerShellHookPath } = getHookPaths(env);
+
+  assert.ok(fs.existsSync(hookPath), `Hook not found at ${hookPath}`);
+
+  if (isWindows) {
+    assert.ok(
+      fs.existsSync(powerShellHookPath),
+      `PowerShell hook runtime not found at ${powerShellHookPath}`,
+    );
+  } else {
+    assert.ok(
+      !fs.existsSync(powerShellHookPath),
+      `Unexpected PowerShell hook runtime found at ${powerShellHookPath}`,
+    );
+  }
+}
+
 // Helper to create a git repo with the hook installed
 function createTestRepo(name, env) {
   const repoDir = path.join(tempRoot, name);
@@ -93,8 +147,9 @@ function getLastCommitMessage(repoDir, env) {
 
 // Helper to check if message contains AI signature
 function containsAISignature(message) {
-  const aiPattern = /^Co-Authored-By:\s*(Claude|GitHub Copilot|ChatGPT|Anthropic|OpenAI|Cursor AI|AI Assistant|Tabnine|CodeWhisperer|Codeium|Replit Ghostwriter|Sourcegraph Cody|Cody|Factory Droid|factory-droid|Gemini|Google Gemini|Gemini Pro|Perplexity|Perplexity AI|Amazon Q|Amp|Amp AI)/im;
-  return aiPattern.test(message);
+  return message
+    .split(/\r?\n/)
+    .some((line) => aiSignatureRegexes.some((regex) => regex.test(line)));
 }
 
 // Helper to check if message contains human co-author (non-AI)
@@ -118,8 +173,14 @@ try {
     const expectedTemplateDir = toGitPath(path.join(env.HOME, '.git-templates'));
     assert.equal(gitConfig.stdout.trim(), expectedTemplateDir);
 
-    const hookPath = path.join(env.HOME, '.git-templates', 'hooks', 'commit-msg');
-    assert.ok(fs.existsSync(hookPath), `Hook not found at ${hookPath}`);
+    assertHookArtifacts(env);
+
+    const statusResult = runNode([cliPath, 'status'], { env });
+    assertSuccess(statusResult, 'status after default install');
+    assert.match(
+      stripAnsi(statusResult.stdout),
+      isWindows ? /Hook mode: PowerShell native/i : /Hook mode: Node\.js/i,
+    );
 
     const repoDir = path.join(tempRoot, 'default-repo');
     fs.mkdirSync(repoDir, { recursive: true });
@@ -145,8 +206,7 @@ try {
     assertSuccess(gitConfig, 'read conflicting git config');
     assert.equal(gitConfig.stdout.trim(), presetTemplate);
 
-    const hookPath = path.join(env.HOME, '.git-templates', 'hooks', 'commit-msg');
-    assert.ok(fs.existsSync(hookPath), `Conflict case did not create hook at ${hookPath}`);
+    assertHookArtifacts(env);
   }
 
   // =========================================================================
@@ -429,8 +489,7 @@ Fixes #123`;
     const result3 = runNode([cliPath, 'install', '--force'], { env });
     assertSuccess(result3, 'install with --force');
     
-    const hookPath = path.join(env.HOME, '.git-templates', 'hooks', 'commit-msg');
-    assert.ok(fs.existsSync(hookPath), 'Hook should exist after multiple installs');
+    assertHookArtifacts(env);
     console.log('✓ Installation idempotency verified');
   }
 
@@ -443,6 +502,10 @@ Fixes #123`;
   console.log('\n--- VAL-INSTALL-006: Uninstallation ---');
   {
     const env = createHome('uninstall-home');
+
+    const installResult = runNode([cliPath, 'install'], { env });
+    assertSuccess(installResult, 'install before uninstall');
+    assertHookArtifacts(env);
     
     // Verify uninstall command runs without errors (use --silent to skip confirmation)
     const uninstallResult = runNode([cliPath, 'uninstall', '--silent'], { env });
@@ -450,12 +513,16 @@ Fixes #123`;
     assert.ok(uninstallResult.stdout.includes('Uninstallation complete') || 
                uninstallResult.stdout.includes('Hook file not found'),
       'Uninstall should report completion');
+
+    const { hookPath, powerShellHookPath } = getHookPaths(env);
+    assert.ok(!fs.existsSync(hookPath), 'Hook entrypoint should be removed');
+    assert.ok(!fs.existsSync(powerShellHookPath), 'PowerShell hook runtime should be removed');
     
     // Verify uninstall with --remove-config runs without errors
     const uninstallWithConfigResult = runNode([cliPath, 'uninstall', '--silent', '--remove-config'], { env });
     assertSuccess(uninstallWithConfigResult, 'uninstall with --remove-config');
     
-    console.log('✓ Uninstallation commands verified (note: tests against real home dir)');
+    console.log('✓ Uninstallation commands verified');
   }
 
   // =========================================================================
@@ -665,32 +732,37 @@ Fixes #123`;
       assertSuccess(commitResult, `commit ${i} for rebase test`);
     }
     
-    // Simulate rebase squash by using git rebase with automated commands
-    // Use GIT_SEQUENCE_EDITOR to automate the rebase todo list (replace pick with squash)
-    // Cross-platform: use Node.js instead of sed for Windows support
-    const sequenceEditor = `node -e "const fs=require('fs'),f=process.argv[1];let c=fs.readFileSync(f,'utf8');c=c.replace(/^pick/gm,(m,o)=>(c.substring(0,o).split('\\n').length<=3?'squash':m));fs.writeFileSync(f,c)"`;
+    const squashMessage = `feat: squashed commits\n\nCombined multiple commits.\n\nCo-Authored-By: Claude <claude@anthropic.com>\nCo-Authored-By: GitHub Copilot <copilot@github.com>`;
+
+    // Simulate rebase squash by using git rebase with automated commands.
+    // GIT_SEQUENCE_EDITOR rewrites the todo list. GIT_EDITOR intentionally fails
+    // once so Git leaves the squash message on disk, letting the test rewrite the
+    // message with AI signatures and continue non-interactively.
+    const sequenceEditor = `node -e "const fs=require('fs'),f=process.argv[1];const lines=fs.readFileSync(f,'utf8').split(/\\r?\\n/);let seenPick=false;const next=lines.map((line)=>{if(!line.startsWith('pick '))return line;if(!seenPick){seenPick=true;return line;}return line.replace(/^pick /,'squash ');});fs.writeFileSync(f,next.join('\\n'))"`;
     const rebaseEnv = {
       ...env,
       GIT_SEQUENCE_EDITOR: sequenceEditor,
+      GIT_EDITOR: `node -e "process.exit(1)"`,
     };
     
     // Run rebase to squash the last 2 commits into the first
     const rebaseResult = run('git', ['rebase', '-i', '--root'], { cwd: repoDir, env: rebaseEnv });
     
-    // Rebase may require a commit message edit - handle by writing to the file
-    // The hook should still work during the rebase process
     if (rebaseResult.status !== 0) {
-      // If rebase is waiting for message, the commit msg file should exist
       const commitMsgPath = path.join(repoDir, '.git', 'COMMIT_EDITMSG');
-      if (fs.existsSync(commitMsgPath)) {
-        // Rewrite the message with AI signature
-        const squashMessage = `feat: squashed commits\n\nCombined multiple commits.\n\nCo-Authored-By: Claude <claude@anthropic.com>\nCo-Authored-By: GitHub Copilot <copilot@github.com>`;
-        fs.writeFileSync(commitMsgPath, squashMessage);
-        
-        // Continue the rebase
-        const continueResult = run('git', ['rebase', '--continue'], { cwd: repoDir, env });
-        assertSuccess(continueResult, 'continue rebase after message edit');
-      }
+      assert.ok(fs.existsSync(commitMsgPath), 'rebase should stop with COMMIT_EDITMSG ready');
+      fs.writeFileSync(commitMsgPath, squashMessage);
+
+      const continueResult = run('git', ['rebase', '--continue'], {
+        cwd: repoDir,
+        env: {
+          ...env,
+          GIT_EDITOR: `node -e "process.exit(0)"`,
+        },
+      });
+      assertSuccess(continueResult, 'continue rebase after rewriting squash message');
+    } else {
+      assert.fail('interactive rebase squash should require message rewrite');
     }
     
     // Verify AI signatures removed from final commit
@@ -710,16 +782,22 @@ Fixes #123`;
     const result = runNode([cliPath, 'install'], { env });
     assertSuccess(result, 'install for platform test');
 
-    const hookPath = path.join(env.HOME, '.git-templates', 'hooks', 'commit-msg');
+    const { hookPath, powerShellHookPath } = getHookPaths(env);
     const hookContent = fs.readFileSync(hookPath, 'utf8');
     
     // Check that hook uses LF line endings (Unix-style)
     const hasCRLF = hookContent.includes('\r\n');
     assert.ok(!hasCRLF, 'Hook should use LF line endings, not CRLF');
     
-    // Check hook content has expected elements
-    assert.ok(hookContent.includes('#!/usr/bin/env node'), 'Hook should have Node.js shebang');
-    assert.ok(hookContent.includes("require('fs')"), 'Hook should use Node.js fs');
+    if (isWindows) {
+      assert.ok(hookContent.includes('#!/bin/sh'), 'Windows hook should use POSIX wrapper entrypoint');
+      assert.ok(fs.existsSync(powerShellHookPath), 'Windows PowerShell runtime should exist');
+      const powerShellContent = fs.readFileSync(powerShellHookPath, 'utf8');
+      assert.ok(powerShellContent.includes('Get-Content -LiteralPath'));
+    } else {
+      assert.ok(hookContent.includes('#!/usr/bin/env node'), 'Hook should have Node.js shebang');
+      assert.ok(hookContent.includes("require('fs')"), 'Hook should use Node.js fs');
+    }
     
     console.log('✓ Platform-specific installation verified');
   }
