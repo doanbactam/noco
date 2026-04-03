@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1] - 2026-04-03
+
+### Fixed
+- Tightened AI co-author name matching to avoid stripping human co-authors like `Claude Smith`
+- Wired `uninstall --remove-config` through the CLI so it now removes `init.templatedir` as advertised
+- Updated `status` to inspect hook files from the actual configured `init.templatedir` instead of assuming the default template path
+
 ## [1.1.0] - 2026-03-28
 
 ### Changed
