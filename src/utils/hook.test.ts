@@ -10,7 +10,7 @@ import {
 import { AI_AUTHOR_NAMES, AI_SIGNATURE_CATALOG } from '../types';
 
 /**
- * Unit tests for nococli hook — Node.js cross-platform hook
+ * Unit tests for nococli hook -- Node.js cross-platform hook
  */
 
 const windowsConfig = {
@@ -301,8 +301,8 @@ describe('Pattern Matching - Mixed AI and Human Co-Authors (VAL-PATTERN-007)', (
     const emailRegex = new RegExp(patterns[1].pattern, 'i');
 
     // These have AI-sounding names but human emails
-    // Name pattern matches (greedy .*) — known false positive
-    // Email pattern does NOT match — provides safety net
+    // Name pattern matches (greedy .*) -- known false positive
+    // Email pattern does NOT match -- provides safety net
     const humanWithAIName = [
       'Co-Authored-By: Claude Smith <claude.smith@company.com>',
       'Co-Authored-By: Gemini Wong <gemini.wong@company.com>',
@@ -310,9 +310,9 @@ describe('Pattern Matching - Mixed AI and Human Co-Authors (VAL-PATTERN-007)', (
     ];
 
     humanWithAIName.forEach((human) => {
-      // Name pattern still matches — known limitation
+      // Name pattern still matches -- known limitation
       expect(nameRegex.test(human)).toBe(true);
-      // Email pattern does NOT match — email-based safety net
+      // Email pattern does NOT match -- email-based safety net
       expect(emailRegex.test(human)).toBe(false);
     });
   });

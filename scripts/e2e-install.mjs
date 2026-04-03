@@ -233,7 +233,7 @@ Co-Authored-By: Claude <claude@anthropic.com>`;
       `AI signature should be removed. Got: ${lastMessage}`);
     assert.ok(lastMessage.includes('feat: add new feature'), 
       'Message body should be preserved');
-    console.log('✓ Basic signature removal works');
+    console.log('Basic signature removal works');
   }
 
   // =========================================================================
@@ -263,7 +263,7 @@ Co-Authored-By: Claude <claude@anthropic.com>`;
       assert.ok(!containsAISignature(lastMessage), 
         `Case variation "${testCase.label}" should be removed. Got: ${lastMessage}`);
     }
-    console.log('✓ All case variations are matched and removed');
+    console.log('All case variations are matched and removed');
   }
 
   // =========================================================================
@@ -305,7 +305,7 @@ Co-Authored-By: Claude <claude@anthropic.com>`;
       assert.ok(!containsAISignature(lastMessage), 
         `AI signature "${ai.name}" should be removed. Got: ${lastMessage}`);
     }
-    console.log(`✓ All ${aiNames.length} AI names are matched and removed`);
+    console.log(`All ${aiNames.length} AI names are matched and removed`);
   }
 
   // =========================================================================
@@ -334,7 +334,7 @@ Co-Authored-By: Cursor AI <cursor@cursor.sh>`;
       `All AI signatures should be removed. Got: ${lastMessage}`);
     assert.ok(lastMessage.includes('feat: add new feature'), 
       'Message body should be preserved');
-    console.log('✓ Multiple AI signatures are all removed');
+    console.log('Multiple AI signatures are all removed');
   }
 
   // =========================================================================
@@ -364,7 +364,7 @@ Co-Authored-By: GitHub Copilot <copilot@github.com>`;
       'Human co-author John Doe should be preserved');
     assert.ok(containsHumanCoAuthor(lastMessage, 'Jane Smith'), 
       'Human co-author Jane Smith should be preserved');
-    console.log('✓ AI signatures removed, human co-authors preserved');
+    console.log('AI signatures removed, human co-authors preserved');
   }
 
   // =========================================================================
@@ -393,7 +393,7 @@ Co-Authored-By: GitHub Copilot <copilot@github.com>`;
       assert.ok(!containsAISignature(lastMessage), 
         `Whitespace variation "${testCase.label}" should be removed. Got: ${lastMessage}`);
     }
-    console.log('✓ All whitespace variations are handled');
+    console.log('All whitespace variations are handled');
   }
 
   // =========================================================================
@@ -425,7 +425,7 @@ Co-Authored-By: Claude <claude@anthropic.com>
       `Trailing blank lines should be cleaned. Got ending with: ${JSON.stringify(lastMessage.slice(-20))}`);
     assert.ok(!containsAISignature(lastMessage), 
       'AI signature should be removed');
-    console.log('✓ Trailing blank lines are cleaned up');
+    console.log('Trailing blank lines are cleaned up');
   }
 
   // =========================================================================
@@ -467,7 +467,7 @@ Fixes #123`;
       'List items should be preserved');
     assert.ok(lastMessage.includes('Fixes #123'), 
       'Trailer should be preserved');
-    console.log('✓ Message integrity preserved');
+    console.log('Message integrity preserved');
   }
 
   // =========================================================================
@@ -490,7 +490,7 @@ Fixes #123`;
     assertSuccess(result3, 'install with --force');
     
     assertHookArtifacts(env);
-    console.log('✓ Installation idempotency verified');
+    console.log('Installation idempotency verified');
   }
 
   // =========================================================================
@@ -522,7 +522,7 @@ Fixes #123`;
     const uninstallWithConfigResult = runNode([cliPath, 'uninstall', '--silent', '--remove-config'], { env });
     assertSuccess(uninstallWithConfigResult, 'uninstall with --remove-config');
     
-    console.log('✓ Uninstallation commands verified');
+    console.log('Uninstallation commands verified');
   }
 
   // =========================================================================
@@ -554,7 +554,7 @@ Fixes #123`;
     assert.ok(!containsAISignature(lastMessage), 
       `Signature should be removed in full flow. Got: ${lastMessage}`);
     
-    console.log('✓ Full installation and commit flow verified');
+    console.log('Full installation and commit flow verified');
   }
 
   // =========================================================================
@@ -590,7 +590,7 @@ Fixes #123`;
     const lastMessage = getLastCommitMessage(repoDir, env);
     assert.ok(!containsAISignature(lastMessage), 'Signature should be removed');
     
-    console.log('✓ Existing repository hook application verified');
+    console.log('Existing repository hook application verified');
   }
 
   // =========================================================================
@@ -623,7 +623,7 @@ Fixes #123`;
     const lastMessage = getLastCommitMessage(repoDir, env);
     assert.ok(lastMessage.includes('John Doe'), 'Human co-author should be preserved');
     
-    console.log('✓ Hook non-blocking behavior verified');
+    console.log('Hook non-blocking behavior verified');
   }
 
   // =========================================================================
@@ -656,7 +656,7 @@ Fixes #123`;
     assert.ok(!containsAISignature(allMessagesResult.stdout), 
       'All commit messages should be clean of AI signatures');
     
-    console.log('✓ Concurrent hook safety verified');
+    console.log('Concurrent hook safety verified');
   }
 
   // =========================================================================
@@ -678,7 +678,7 @@ Fixes #123`;
     
     assertSuccess(commitResult, 'performance commit');
     assert.ok(elapsed < 5000, `Hook should complete quickly (took ${elapsed}ms)`);
-    console.log(`✓ Hook performance: ${elapsed}ms (target < 5000ms)`);
+    console.log(`Hook performance: ${elapsed}ms (target < 5000ms)`);
   }
 
   // =========================================================================
@@ -711,7 +711,7 @@ Fixes #123`;
     assert.ok(!containsAISignature(lastMessage), 
       `All AI signatures should be removed from amended commit. Got: ${lastMessage}`);
     
-    console.log('✓ Amended commit handling verified');
+    console.log('Amended commit handling verified');
   }
 
   // =========================================================================
@@ -770,7 +770,7 @@ Fixes #123`;
     assert.ok(!containsAISignature(lastMessage), 
       `AI signatures should be removed from rebased commit. Got: ${lastMessage}`);
     
-    console.log('✓ Interactive rebase safety verified');
+    console.log('Interactive rebase safety verified');
   }
 
   // =========================================================================
@@ -799,7 +799,7 @@ Fixes #123`;
       assert.ok(hookContent.includes("require('fs')"), 'Hook should use Node.js fs');
     }
     
-    console.log('✓ Platform-specific installation verified');
+    console.log('Platform-specific installation verified');
   }
 
   // =========================================================================
@@ -831,7 +831,7 @@ Fixes #123`;
     assert.ok(!containsAISignature(lastMessage), 
       'Signature should be removed in CI environment');
     
-    console.log('✓ CI/CD environment compatibility verified');
+    console.log('CI/CD environment compatibility verified');
   }
 
   // =========================================================================
@@ -880,7 +880,7 @@ Fixes #123`;
     assert.ok(lastMessage.includes("Merge branch 'feature-branch'"), 
       'Merge message should be preserved');
     
-    console.log('✓ Merge commit handling verified');
+    console.log('Merge commit handling verified');
   }
 
   console.log('\n========================================');

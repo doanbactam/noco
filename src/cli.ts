@@ -18,11 +18,10 @@ import {
   setGitUserName,
   setGitUserEmail,
 } from './utils/git.js';
-import { getConfig } from './utils/paths.js';
+import { getConfig, pathExists } from './utils/paths.js';
 import { Logger } from './utils/logger.js';
 import { detectPowerShellRuntime } from './utils/runtime.js';
 import { isAIAuthor } from './types.js';
-import { access } from 'fs/promises';
 
 const logger = new Logger();
 
@@ -50,15 +49,6 @@ async function promptConfirm(message: string): Promise<boolean> {
   const answer = await rl.question(`${message} (y/N): `);
   rl.close();
   return answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes';
-}
-
-async function fileExists(filePath: string): Promise<boolean> {
-  try {
-    await access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 async function runInstallCommand(options: { force?: boolean; silent?: boolean }): Promise<void> {
@@ -186,8 +176,8 @@ program
       logger.warning('Not installed');
     }
 
-    const hookExists = await fileExists(config.hookFile);
-    const powerShellHookExists = await fileExists(config.powerShellHookFile);
+    const hookExists = await pathExists(config.hookFile);
+    const powerShellHookExists = await pathExists(config.powerShellHookFile);
 
     if (hookExists) {
       logger.success('Hook entrypoint exists');

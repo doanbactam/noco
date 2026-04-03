@@ -5,6 +5,7 @@
 import fs from 'fs/promises';
 import { Logger } from './utils/logger.js';
 import { getConfig, pathExists } from './utils/paths.js';
+import { HOOK_BACKUP_EXT } from './utils/hook.js';
 import { unsetGitConfig } from './utils/git.js';
 import type { UninstallOptions } from './types.js';
 import type { HookMode } from './types.js';
@@ -39,21 +40,18 @@ export async function uninstall(options: UninstallOptions = {}): Promise<Uninsta
       logger.info('PowerShell hook file not found (already removed?)');
     }
 
-    // Restore backups if they exist
     for (const hookPath of [config.hookFile, config.powerShellHookFile]) {
-      const backupPath = `${hookPath}.bak`;
-      if (await pathExists(backupPath)) {
+      const backupPath = `${hookPath}${HOOK_BACKUP_EXT}`;
+      try {
         await fs.rename(backupPath, hookPath);
         logger.success(`Restored previous hook from ${backupPath}`);
+      } catch {
+        // No backup exists — nothing to restore
       }
     }
 
     try {
-      const hooksExists = await fs
-        .access(config.hooksDir)
-        .then(() => true)
-        .catch(() => false);
-      if (hooksExists) {
+      if (await pathExists(config.hooksDir)) {
         const files = await fs.readdir(config.hooksDir);
         if (files.length === 0) {
           await fs.rmdir(config.hooksDir);
@@ -61,11 +59,7 @@ export async function uninstall(options: UninstallOptions = {}): Promise<Uninsta
         }
       }
 
-      const templateExists = await fs
-        .access(config.templateDir)
-        .then(() => true)
-        .catch(() => false);
-      if (templateExists) {
+      if (await pathExists(config.templateDir)) {
         const files = await fs.readdir(config.templateDir);
         if (files.length === 0) {
           await fs.rmdir(config.templateDir);
