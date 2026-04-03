@@ -1,0 +1,100 @@
+[
+  {
+    "id": "claude",
+    "signatureAliases": ["Claude", "Anthropic"],
+    "authorTokens": [
+      "claude",
+      "claude code",
+      "claude opus",
+      "claude sonnet",
+      "claude haiku",
+      "anthropic"
+    ],
+    "emails": ["noreply@anthropic.com", "claude@anthropic.com"]
+  },
+  {
+    "id": "copilot",
+    "signatureAliases": ["GitHub Copilot"],
+    "authorTokens": ["github copilot", "copilot"],
+    "emails": ["copilot@github.com"]
+  },
+  {
+    "id": "chatgpt",
+    "signatureAliases": ["ChatGPT", "OpenAI"],
+    "authorTokens": ["chatgpt", "openai"],
+    "emails": ["chatgpt@openai.com", "noreply@openai.com"]
+  },
+  {
+    "id": "cursor",
+    "signatureAliases": ["Cursor AI"],
+    "authorTokens": ["cursor ai", "cursor"],
+    "emails": ["cursor@cursor.sh"]
+  },
+  {
+    "id": "ai-assistant",
+    "signatureAliases": ["AI Assistant"],
+    "authorTokens": ["ai assistant"],
+    "emails": []
+  },
+  {
+    "id": "tabnine",
+    "signatureAliases": ["Tabnine"],
+    "authorTokens": ["tabnine"],
+    "emails": ["tabnine@tabnine.com"]
+  },
+  {
+    "id": "codewhisperer",
+    "signatureAliases": ["CodeWhisperer"],
+    "authorTokens": ["codewhisperer"],
+    "emails": ["codewhisperer@amazon.com"]
+  },
+  {
+    "id": "codeium",
+    "signatureAliases": ["Codeium"],
+    "authorTokens": ["codeium"],
+    "emails": ["codeium@codeium.com"]
+  },
+  {
+    "id": "replit-ghostwriter",
+    "signatureAliases": ["Replit Ghostwriter"],
+    "authorTokens": ["replit ghostwriter"],
+    "emails": ["ghostwriter@replit.com"]
+  },
+  {
+    "id": "sourcegraph-cody",
+    "signatureAliases": ["Sourcegraph Cody", "Cody"],
+    "authorTokens": ["sourcegraph cody", "cody"],
+    "emails": ["cody@sourcegraph.com"]
+  },
+  {
+    "id": "factory-droid",
+    "signatureAliases": ["Factory Droid", "factory-droid[bot]"],
+    "authorTokens": ["factory droid", "factory-droid", "factory-droid[bot]"],
+    "emails": [],
+    "emailPatterns": ["\\d+\\+factory-droid\\[bot\\]@users\\.noreply\\.github\\.com"]
+  },
+  {
+    "id": "gemini",
+    "signatureAliases": ["Gemini", "Google Gemini", "Gemini Pro"],
+    "authorTokens": ["gemini", "google gemini"],
+    "emails": ["gemini@google.com"]
+  },
+  {
+    "id": "perplexity",
+    "signatureAliases": ["Perplexity", "Perplexity AI"],
+    "authorTokens": ["perplexity", "perplexity ai"],
+    "emails": ["perplexity@perplexity.ai"]
+  },
+  {
+    "id": "amazon-q",
+    "signatureAliases": ["Amazon Q"],
+    "authorTokens": ["amazon q"],
+    "emails": ["q@amazon.com"]
+  },
+  {
+    "id": "amp",
+    "signatureAliases": ["Amp", "Amp AI"],
+    "authorTokens": ["amp", "amp ai"],
+    "emails": ["amp@amp.ai"]
+  }
+]

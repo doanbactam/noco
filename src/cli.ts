@@ -20,6 +20,7 @@ import {
 } from './utils/git.js';
 import { getConfig } from './utils/paths.js';
 import { Logger } from './utils/logger.js';
+import { detectPowerShellRuntime } from './utils/runtime.js';
 import { isAIAuthor } from './types.js';
 import { access } from 'fs/promises';
 
@@ -49,6 +50,15 @@ async function promptConfirm(message: string): Promise<boolean> {
   const answer = await rl.question(`${message} (y/N): `);
   rl.close();
   return answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes';
+}
+
+async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 async function runInstallCommand(options: { force?: boolean; silent?: boolean }): Promise<void> {
@@ -107,6 +117,15 @@ async function runInstallCommand(options: { force?: boolean; silent?: boolean })
   }
 
   logger.blank();
+  if (result.hookMode === 'powershell') {
+    logger.info(`Hook mode: ${logger.cyan('PowerShell native')}`);
+    logger.info(`PowerShell runtime: ${logger.cyan(result.runtime || 'unavailable')}`);
+    logger.blank();
+  } else {
+    logger.info(`Hook mode: ${logger.cyan('Node.js')}`);
+    logger.blank();
+  }
+
   logger.info('AI signatures that will be removed:');
   getPatternNames().forEach((p) => logger.info(`  ${logger.dim('\u2022')} ${p}`));
   logger.blank();
@@ -159,6 +178,7 @@ program
   .action(async () => {
     logger.header('noco Status');
 
+    const config = getConfig();
     const current = getTemplateDir();
     if (current.exists && current.value) {
       logger.success(`Installed at ${current.value}`);
@@ -166,12 +186,31 @@ program
       logger.warning('Not installed');
     }
 
-    const config = getConfig();
-    try {
-      await access(config.hookFile);
-      logger.success('Hook file exists');
-    } catch {
+    const hookExists = await fileExists(config.hookFile);
+    const powerShellHookExists = await fileExists(config.powerShellHookFile);
+
+    if (hookExists) {
+      logger.success('Hook entrypoint exists');
+    } else {
       logger.warning('Hook file not found');
+    }
+
+    if (powerShellHookExists) {
+      logger.success('PowerShell hook runtime exists');
+      const runtime = detectPowerShellRuntime();
+      if (runtime) {
+        logger.info(`Hook mode: ${logger.cyan('PowerShell native')}`);
+        logger.info(`Runtime: ${logger.cyan(runtime)}`);
+      } else {
+        logger.warning('PowerShell hook installed, but no PowerShell runtime was detected');
+      }
+    } else if (hookExists) {
+      logger.info(`Hook mode: ${logger.cyan('Node.js')}`);
+      if (process.platform === 'win32') {
+        logger.warning(
+          'Legacy Windows hook detected. Re-run `npx nococli install` to install PowerShell support.',
+        );
+      }
     }
 
     logger.blank();
